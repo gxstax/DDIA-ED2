@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/DDIA-ED2/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=DDIA-ED2/livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>My New Hugo Site</title>
+<meta name="keywords" content="">
+<meta name="description" content="第二部分：分布式数据
+
+对成功的技术而言，现实必须置于比公共关系更加优先的地位，因为大自然是无法被欺骗的。
+— 理查德·费曼，罗杰斯委员会报告（1986）
+在本书的第一部分，我们讨论了数据存储在单个机器场景的数据系统。在第二部分，我们不妨更进一层，试问：当有多台机器同事对数据进行存储或检索将会发生什么呢？
+以下是把数据库的数据分别放到多台机器上来进行存储的原因：
+
+
+可扩展性:
+如果你的数据体量不断增加，读写负载超过单台机器所能承载的最大值，你可能会把这些负载分摊到多台机器上。
+
+
+容错性/高可用性:
+如果你的应用想要在一台机器（或多台机器，或者网络，或者单个数据中心）故障后仍能继续工作，你可以使用多台机器来为你提供冗余服务。当一个失败后，另外一个可以接管它来执行任务。
+
+
+延迟：
+如果你们的用户遍布世界各地，你可能会希望在世界各地的不同位置都拥有服务器，以便每个用户都可以从一个地理学上更接近他们的数据中心来获得服务。这样就避免了用户需要等待网络包穿越大半个地球才传输过来。
+
+
+应对更高负载的扩展
+如果你只是用来应对高负载，那么最简单的办法就是选用一台更加强劲的机器（这种方式也被称为垂直扩展或升级升级）。多个cpu，多块内存，多个磁盘可以在同一个操作系统下结合使用，快速的连接设备使得cpu可以访问内存或磁盘的任何位置。在这种「共享内存架构」（shared-memory architecture）下，所有的组建都可以看作是一台机器[1]。1
+共享内存的方式存在的一个问题就是，它的花费开销增长曲线比线性架构增长的更快：一个拥有两倍多的CPU，两倍多的内存以及两倍多磁盘容量的机器，它的开销比起单倍的机器通常要多于两倍。
+共享内存体系架构所提供的「容错性」是有限的—高端的机器一般都支持热插拔组建（你可以在不关闭电源的情况下来更换硬盘、内存、甚至是CPU）—但这也仅限于在同一地理位置范围内。
+另外一种是共享磁盘架构，它使用多台具有独立CPU和内存的机器，但是存储数据的磁盘阵列是被所有机器共享的，他们之间通过快速网络来进行连接。2这种架构适用于一些数据仓库场景，但是争用和锁开销限制了共享磁盘架构的可伸缩性[2]。
+无共享架构
+相比之下，「无共享架构」[3]（有时也称为水平扩展或向外扩展）要更加受青睐。在这种架构下，每一台运行着数据库软件的机器或虚拟机都被称为一个「节点」。每一个节点的CPU，内存和磁盘都是独立的。节点与节点之间也是通过传统的网络在软件层面进行协调。
+「无共享架构」对硬件没有特殊的要求，因此你可以选用架构更合适性价比更高的机器。你可以在多个不同的物理地址之间分发数据，这样可以有效的避免用户请求延迟的问题，而且当一个物理位置的数据中心崩溃后，另外一个能有效的存活下来。随着虚拟机的云部署，你不需要拥有像Google这样级别的运维能力：即使再小的公司，也可以轻松的构建异地多活分布式架构。
+在本书的这一部分，我们关注于「无共享架构」，尽管它可能不是我们所有应用场景中的最佳选择，但是对于我们，作为一个应用开发者来说是很值得我们去审慎对待的。如果你的数据是跨多个节点分区部署的，你要意识到数据库在这中间所做的规范以及权衡性措施—数据库不会平白无故的就帮助你完成这些事情。
+虽然分布式的「无共享架构」有很多优点，但它同时也增加了应用的复杂性，有时候甚至会限制你所使用数据模型的表达能力。有时候，一个简单的单线程程序可能拥有比100核CPU的集群更好的性能表现[4]。不过，「无共享系统」的能力还是非常强大的。我们将在接下来的几章来详细介绍数据在分布式存储时可能遇到的问题。
+
+副本/分区
+使得数据分布在多个不同的节点一般有两种比较通用的方式：
+
+
+副本
+在可能分布在不同地理位置的不同节点上保存相同的数据副本。提供冗余复制：当一些节点不可用时，其它数据节点还可以继续提供服务。副本机制还有助于提升性能。我们将在 第五章 来讨论「副本」。
+
+
+分区
+把一个大的数据库分解为更小的数据集称做「分区」，所以不同的分区可以看作是不同的节点（也可称为分片-sharding）。我们将在 第六章 来讨论「分区」。
+
+
+虽说这些都是一些独立的特性，但往往他们可以同时使用。如图II-1所示：
+
+图II-1.一个拥有两个分区，每个分区有两个副本的数据库。
+理解了这些概念，我们可以讨论在分布式系统中所面临的困境以及在处理这些问题过程中所做的权衡。我们会在第七章 中讨论事务，这将会帮助你理解在分布式数据系统中可能出错的地方和原因以及我们怎么去避免这些错误。我们将在 第八章 和 第九章 中讨论分布式数据系统基本局限性来结束这一部分的内容。
+后面，我们会在本书的 第三部分来讨论如果把多个数据仓库系统（有可能是分布式的）合并到一个更大的系统中，以此来满足更复杂应用的需求。但前提是，我们得闲讨论分布式数据。
+参考文献
+[1] Ulrich Drepper: “What Every Programmer Should Know About Memory,” akka‐dia.org, November 21, 2007.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/DDIA-ED2/book/part2/readme/">
+<link crossorigin="anonymous" href="/DDIA-ED2/assets/css/stylesheet.a090830a421002426baafbd314e38f149d77b4c48a12ee9312700d770b27fb26.css" integrity="sha256-oJCDCkIQAkJrqvvTFOOPFJ13tMSKEu6TEnANdwsn&#43;yY=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/DDIA-ED2/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/DDIA-ED2/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/DDIA-ED2/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/DDIA-ED2/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/DDIA-ED2/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/DDIA-ED2/book/part2/readme/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/DDIA-ED2/" accesskey="h" title="My New Hugo Site (Alt + H)">My New Hugo Site</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      
+    </h1>
+    <div class="post-meta">
+
+</div>
+  </header> 
+  <div class="post-content"><h1 id="第二部分分布式数据">第二部分：分布式数据<a hidden class="anchor" aria-hidden="true" href="#第二部分分布式数据">#</a></h1>
+<blockquote>
+<p>对成功的技术而言，现实必须置于比公共关系更加优先的地位，因为大自然是无法被欺骗的。</p>
+<p>— 理查德·费曼，罗杰斯委员会报告（1986）</p></blockquote>
+<p>在本书的第一部分，我们讨论了数据存储在单个机器场景的数据系统。在第二部分，我们不妨更进一层，试问：当有多台机器同事对数据进行存储或检索将会发生什么呢？</p>
+<p>以下是把数据库的数据分别放到多台机器上来进行存储的原因：</p>
+<ul>
+<li>
+<p>可扩展性:</p>
+<p>如果你的数据体量不断增加，读写负载超过单台机器所能承载的最大值，你可能会把这些负载分摊到多台机器上。</p>
+</li>
+<li>
+<p>容错性/高可用性:</p>
+<p>如果你的应用想要在一台机器（或多台机器，或者网络，或者单个数据中心）故障后仍能继续工作，你可以使用多台机器来为你提供冗余服务。当一个失败后，另外一个可以接管它来执行任务。</p>
+</li>
+<li>
+<p>延迟：</p>
+<p>如果你们的用户遍布世界各地，你可能会希望在世界各地的不同位置都拥有服务器，以便每个用户都可以从一个地理学上更接近他们的数据中心来获得服务。这样就避免了用户需要等待网络包穿越大半个地球才传输过来。</p>
+</li>
+</ul>
+<h2 id="应对更高负载的扩展">应对更高负载的扩展<a hidden class="anchor" aria-hidden="true" href="#应对更高负载的扩展">#</a></h2>
+<p>如果你只是用来应对高负载，那么最简单的办法就是选用一台更加强劲的机器（这种方式也被称为<strong>垂直扩展</strong>或<strong>升级升级</strong>）。多个cpu，多块内存，多个磁盘可以在同一个操作系统下结合使用，快速的连接设备使得cpu可以访问内存或磁盘的任何位置。在这种「共享内存架构」（<em>shared-memory architecture</em>）下，所有的组建都可以看作是一台机器[<a href="#part2References1">1</a>]。<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup></p>
+<p>共享内存的方式存在的一个问题就是，它的花费开销增长曲线比线性架构增长的更快：一个拥有两倍多的CPU，两倍多的内存以及两倍多磁盘容量的机器，它的开销比起单倍的机器通常要多于两倍。</p>
+<p>共享内存体系架构所提供的「<strong>容错性</strong>」是有限的—高端的机器一般都支持热插拔组建（你可以在不关闭电源的情况下来更换硬盘、内存、甚至是CPU）—但这也仅限于在同一地理位置范围内。</p>
+<p>另外一种是共享磁盘架构，它使用多台具有独立CPU和内存的机器，但是存储数据的磁盘阵列是被所有机器共享的，他们之间通过快速网络来进行连接。<sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup>这种架构适用于一些数据仓库场景，但是争用和锁开销限制了共享磁盘架构的可伸缩性[<a href="#part2References2">2</a>]。</p>
+<h3 id="无共享架构">无共享架构<a hidden class="anchor" aria-hidden="true" href="#无共享架构">#</a></h3>
+<p>相比之下，「<strong>无共享架构</strong>」[<a href="#part2References3">3</a>]（有时也称为<strong>水平扩展</strong>或<strong>向外扩展</strong>）要更加受青睐。在这种架构下，每一台运行着数据库软件的机器或虚拟机都被称为一个「<strong>节点</strong>」。每一个节点的CPU，内存和磁盘都是独立的。节点与节点之间也是通过传统的网络在软件层面进行协调。</p>
+<p>「<strong>无共享架构</strong>」对硬件没有特殊的要求，因此你可以选用架构更合适性价比更高的机器。你可以在多个不同的物理地址之间分发数据，这样可以有效的避免用户请求延迟的问题，而且当一个物理位置的数据中心崩溃后，另外一个能有效的存活下来。随着虚拟机的云部署，你不需要拥有像Google这样级别的运维能力：即使再小的公司，也可以轻松的构建异地多活分布式架构。</p>
+<p>在本书的这一部分，我们关注于「<strong>无共享架构</strong>」，尽管它可能不是我们所有应用场景中的最佳选择，但是对于我们，作为一个应用开发者来说是很值得我们去审慎对待的。如果你的数据是跨多个节点分区部署的，你要意识到数据库在这中间所做的规范以及权衡性措施—数据库不会平白无故的就帮助你完成这些事情。</p>
+<p>虽然分布式的「<strong>无共享架构</strong>」有很多优点，但它同时也增加了应用的复杂性，有时候甚至会限制你所使用数据模型的表达能力。有时候，一个简单的单线程程序可能拥有比100核CPU的集群更好的性能表现[<a href="#part2References4">4</a>]。不过，「无共享系统」的能力还是非常强大的。我们将在接下来的几章来详细介绍数据在分布式存储时可能遇到的问题。</p>
+<hr>
+<h3 id="副本分区">副本/分区<a hidden class="anchor" aria-hidden="true" href="#副本分区">#</a></h3>
+<p>使得数据分布在多个不同的节点一般有两种比较通用的方式：</p>
+<ul>
+<li>
+<p>副本</p>
+<p>在可能分布在不同地理位置的不同节点上保存相同的数据副本。提供冗余复制：当一些节点不可用时，其它数据节点还可以继续提供服务。副本机制还有助于提升性能。我们将在 <a href="chapter5.md">第五章</a> 来讨论「<strong>副本</strong>」。</p>
+</li>
+<li>
+<p>分区</p>
+<p>把一个大的数据库分解为更小的数据集称做「<strong>分区</strong>」，所以不同的分区可以看作是不同的节点（也可称为分片-<em>sharding</em>）。我们将在 <a href="chapter6.md">第六章</a> 来讨论「<strong>分区</strong>」。</p>
+</li>
+</ul>
+<p>虽说这些都是一些独立的特性，但往往他们可以同时使用。如<!-- raw HTML omitted --><a href="#figureII-1">图II-1</a><!-- raw HTML omitted -->所示：</p>
+<p><img loading="lazy" src="../img/figureII-1.png"></p>
+<p><!-- raw HTML omitted --><!-- raw HTML omitted --><strong>图II-1.</strong><!-- raw HTML omitted --><!-- raw HTML omitted -->一个拥有两个分区，每个分区有两个副本的数据库。</p>
+<p>理解了这些概念，我们可以讨论在分布式系统中所面临的困境以及在处理这些问题过程中所做的权衡。我们会在<a href="chapter7.md">第七章</a> 中讨论事务，这将会帮助你理解在分布式数据系统中可能出错的地方和原因以及我们怎么去避免这些错误。我们将在 <a href="chapter8.md">第八章</a> 和 <a href="chapter9.md">第九章</a> 中讨论分布式数据系统基本局限性来结束这一部分的内容。</p>
+<p>后面，我们会在本书的 <a href="../part3/README.md">第三部分</a>来讨论如果把多个数据仓库系统（有可能是分布式的）合并到一个更大的系统中，以此来满足更复杂应用的需求。但前提是，我们得闲讨论分布式数据。</p>
+<h3 id="参考文献">参考文献<a hidden class="anchor" aria-hidden="true" href="#参考文献">#</a></h3>
+<p>[<!-- raw HTML omitted -->1<!-- raw HTML omitted -->] Ulrich Drepper:<a href="http://www.akkadia.org/drepper/cpumemory.pdf"> “What Every Programmer Should Know About Memory,”</a> <em>akka‐dia.org</em>, November 21, 2007.</p>
+<p>[<!-- raw HTML omitted -->2<!-- raw HTML omitted -->] Ben Stopford: <a href="http://www.benstopford.com/2009/11/24/understanding-the-shared-nothing-architecture/">“Shared Nothing vs. Shared Disk Architectures: An IndependentView,”</a> <em>benstopford.com</em>, November 24, 2009.</p>
+<p>[<!-- raw HTML omitted -->3<!-- raw HTML omitted -->] Michael Stonebraker: <a href="#http://db.cs.berkeley.edu/papers/hpts85-nothing.pdf">“The Case for Shared Nothing,”</a> <em>IEEE Database Engineering Bulletin</em>, volume 9, number 1, pages 4–9, March 1986.</p>
+<p>[<!-- raw HTML omitted -->4<!-- raw HTML omitted -->] Frank McSherry, Michael Isard, and Derek G. Murray: “<a href="#http://www.frankmcsherry.org/assets/COST.pdf">Scalability! But at What COST?</a>,” at <em>15th USENIX Workshop on Hot Topics in Operating Systems</em> (HotOS),May 2015.</p>
+<div class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1">
+<p>In a large machine, although any CPU can access any part of memory, some banks of memory are closer toone CPU than to others (this is called <em>nonuniform memory access</em>, or NUMA ). To make efficient use of this architecture, the processing needs to be broken down so that each CPU mostly accesses memory that isnearby—which means that partitioning is still required, even when ostensibly running on one machine.&#160;<a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:2">
+<p><em>Network Attached Storage</em> (NAS) or <em>Storage Area Network</em> (SAN).&#160;<a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</div>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="http://localhost:1313/DDIA-ED2/">My New Hugo Site</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>

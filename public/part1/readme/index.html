@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr">
+<head><script src="/DDIA-ED2/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=DDIA-ED2/livereload" data-no-instant defer></script>
+  <!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="第一部分：数据系统基础#
+前四章主要介绍适用于所有数据系统的理论基础，包括运行在单机节点以及分布式集群上的数据系统：
+
+
+第一章 介绍我们本书中用到的名词术语以及理论方法. 我们将会阐明到底什么是可靠性，可伸缩性和可维护性，以及我们要怎样达成这些目标。
+
+
+第二章 对比一些不同的数据模型和查询语言，站在开发者的角度，这是数据库系统之间最明显的特征区别。我们会看到不同的数据模型是怎么适用到不同的场景中的。
+
+
+第三章 深入到存储引擎内部来看以下数据是怎么存储在磁盘上的。不同的存储引擎针对不同的数据存储场景都做了针对性的优化，选择正确的存储引擎将极大提升我们的系统性能。
+
+
+第四章 比较各种数据编码（序列化）格式，会着重介绍在它们随着应用需求的变化而不断演化的过程。
+
+
+在后面的第二部分我们会讨论分布式系统特有的一些问题。
+
+目录#
+
+第一章: 可靠性、可伸缩性和可维护性
+第二章: 数据模型与查询语言
+第三章: 存储与检索
+第四章: 编码与演化
+">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#343a40">
+<meta name="color-scheme" content="light dark"><meta property="og:url" content="http://localhost:1313/DDIA-ED2/part1/readme/">
+  <meta property="og:site_name" content="DDIA(第二版)">
+  <meta property="og:title" content="DDIA(第二版)">
+  <meta property="og:description" content="第一部分：数据系统基础# 前四章主要介绍适用于所有数据系统的理论基础，包括运行在单机节点以及分布式集群上的数据系统：
+第一章 介绍我们本书中用到的名词术语以及理论方法. 我们将会阐明到底什么是可靠性，可伸缩性和可维护性，以及我们要怎样达成这些目标。
+第二章 对比一些不同的数据模型和查询语言，站在开发者的角度，这是数据库系统之间最明显的特征区别。我们会看到不同的数据模型是怎么适用到不同的场景中的。
+第三章 深入到存储引擎内部来看以下数据是怎么存储在磁盘上的。不同的存储引擎针对不同的数据存储场景都做了针对性的优化，选择正确的存储引擎将极大提升我们的系统性能。
+第四章 比较各种数据编码（序列化）格式，会着重介绍在它们随着应用需求的变化而不断演化的过程。
+在后面的第二部分我们会讨论分布式系统特有的一些问题。
+目录# 第一章: 可靠性、可伸缩性和可维护性 第二章: 数据模型与查询语言 第三章: 存储与检索 第四章: 编码与演化">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="part1">
+<title>Readme | DDIA(第二版)</title>
+<link rel="icon" href="/DDIA-ED2/favicon.png" >
+<link rel="manifest" href="/DDIA-ED2/manifest.json">
+<link rel="canonical" href="http://localhost:1313/DDIA-ED2/part1/readme/">
+<link rel="stylesheet" href="/DDIA-ED2/book.min.d124d6c76b11546b04023ef152f0ca77dd5bfd00e1638c75250d60e274cdc189.css" integrity="sha256-0STWx2sRVGsEAj7xUvDKd91b/QDhY4x1JQ1g4nTNwYk=" crossorigin="anonymous">
+
+
+  <script defer src="/DDIA-ED2/fuse.min.js"></script>
+  <script defer src="/DDIA-ED2/en.search.min.da0b2f1ab345f07b4b3884222fe5408265657977493c4ec436966a30a893f14d.js" integrity="sha256-2gsvGrNF8HtLOIQiL&#43;VAgmVleXdJPE7ENpZqMKiT8U0=" crossorigin="anonymous"></script>
+
+  
+</head>
+<body dir="ltr" class="book-kind-page book-type-part1">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    
+<aside class="book-menu">
+  <div class="book-menu-content">
+    
+  <nav>
+<h2 class="book-brand">
+  <a class="flex align-center" href="/DDIA-ED2/"><span>DDIA(第二版)</span>
+  </a>
+</h2>
+
+
+<div class="book-search hidden">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+<script>document.querySelector(".book-search").classList.remove("hidden")</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+
+  </div>
+</aside>
+ 
+
+    <div class="book-page">
+      <header class="book-header hidden">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/DDIA-ED2/icons/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <h3>Readme</h3>
+
+  <label for="toc-control">
+    
+    <img src="/DDIA-ED2/icons/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  
+<nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#目录">目录</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown book-article"><h1 id="第一部分数据系统基础">第一部分：数据系统基础<a class="anchor" href="#%e7%ac%ac%e4%b8%80%e9%83%a8%e5%88%86%e6%95%b0%e6%8d%ae%e7%b3%bb%e7%bb%9f%e5%9f%ba%e7%a1%80">#</a></h1>
+<p>前四章主要介绍适用于所有数据系统的理论基础，包括运行在单机节点以及分布式集群上的数据系统：</p>
+<ol>
+<li>
+<p><a href="/DDIA-ED2/part1/chapter1/">第一章</a> 介绍我们本书中用到的名词术语以及理论方法. 我们将会阐明到底什么是<strong>可靠性</strong>，<strong>可伸缩性</strong>和<strong>可维护性</strong>，以及我们要怎样达成这些目标。</p>
+</li>
+<li>
+<p><a href="/DDIA-ED2/part1/chapter2/">第二章</a> 对比一些不同的数据模型和查询语言，站在开发者的角度，这是数据库系统之间最明显的特征区别。我们会看到不同的数据模型是怎么适用到不同的场景中的。</p>
+</li>
+<li>
+<p><a href="/DDIA-ED2/part1/chapter3/">第三章</a> 深入到存储引擎内部来看以下数据是怎么存储在磁盘上的。不同的存储引擎针对不同的数据存储场景都做了针对性的优化，选择正确的存储引擎将极大提升我们的系统性能。</p>
+</li>
+<li>
+<p><a href="/DDIA-ED2/part1/chapter4/">第四章</a> 比较各种数据编码（序列化）格式，会着重介绍在它们随着应用需求的变化而不断演化的过程。</p>
+</li>
+</ol>
+<p><strong>在后面的第二部分我们会讨论分布式系统特有的一些问题。</strong></p>
+<hr>
+<h3 id="目录">目录<a class="anchor" href="#%e7%9b%ae%e5%bd%95">#</a></h3>
+<ol>
+<li><a href="/DDIA-ED2/part1/chapter1/">第一章:</a> 可靠性、可伸缩性和可维护性</li>
+<li><a href="/DDIA-ED2/part1/chapter2/">第二章:</a> 数据模型与查询语言</li>
+<li><a href="/DDIA-ED2/part1/chapter3/">第三章:</a> 存储与检索</li>
+<li><a href="/DDIA-ED2/part1/chapter4/">第四章:</a> 编码与演化</li>
+</ol>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+<div>
+
+</div>
+
+<div>
+
+</div>
+
+</div>
+
+
+
+
+
+
+
+
+
+  <script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script>
+
+
+ 
+        
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+        
+        
+
+ 
+      </footer>
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+
+<aside class="book-toc">
+  <div class="book-toc-content">
+    
+  
+<nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#目录">目录</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+
+  </div>
+</aside>
+
+ 
+  </main>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

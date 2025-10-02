@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr">
+<head><script src="/DDIA-ED2/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=DDIA-ED2/livereload" data-no-instant defer></script>
+  <!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="
+第一章：可靠性、可伸缩性和可维护性#
+
+互联网取得了如此伟大的成就，人们习惯于它的存在就如同海洋自然的存在一样，我们甚至都已经忘记它是一个人造的产物。我们甚至都想不到上一次发生如此伟大的技术革命是在什么时候。
+— Alan Kay, 在接受 Dr Dobb’s 期刊采访时说 (2012)在如今，很多系统都是数据密集型（data-intensive）系统，而非计算密集型（compute-intensive）。原来的CPU性能已经不再是限制应用的关键因素了—现在更多的问题在于数据的量级，数据的复杂度以及数据的变更的频率。
+数据密集型应用程序通常是基于那些拥有通用的标准功能模块所构建的的系统建立起来的。例如：可能很多应用都需要以下功能：
+
+存储数据，以便于自己或其它应用在需要的时候再次查找（数据库）
+把复杂开销的操作记录结果记录下来，以便后续能快速的读取（缓存）
+允许用户通过关键字来搜索，或采用不同的方式来过滤数据（查询索引）
+给其它的“处理器”发送消息，使之能够异步执行（流处理）
+定期处理大量的数据（批处理）
+
+如果当你听到这些并没有多少感触，那只能说明这些数据系统的抽象很成功：我们虽然每天都在用，但是对他们的认识并不深刻。在构建应用程序时，大多数工程师并不会想着去从头写一个数据存储引擎，因为数据库已经是很好支撑这些功能工具了。
+但事实并没有这么简单。">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#343a40">
+<meta name="color-scheme" content="light dark"><meta property="og:url" content="http://localhost:1313/DDIA-ED2/part1/chapter1/">
+  <meta property="og:site_name" content="DDIA(第二版)">
+  <meta property="og:title" content="DDIA(第二版)">
+  <meta property="og:description" content="第一章：可靠性、可伸缩性和可维护性# 互联网取得了如此伟大的成就，人们习惯于它的存在就如同海洋自然的存在一样，我们甚至都已经忘记它是一个人造的产物。我们甚至都想不到上一次发生如此伟大的技术革命是在什么时候。
+— Alan Kay, 在接受 Dr Dobb’s 期刊采访时说 (2012)
+在如今，很多系统都是数据密集型（data-intensive）系统，而非计算密集型（compute-intensive）。原来的CPU性能已经不再是限制应用的关键因素了—现在更多的问题在于数据的量级，数据的复杂度以及数据的变更的频率。
+数据密集型应用程序通常是基于那些拥有通用的标准功能模块所构建的的系统建立起来的。例如：可能很多应用都需要以下功能：
+存储数据，以便于自己或其它应用在需要的时候再次查找（数据库） 把复杂开销的操作记录结果记录下来，以便后续能快速的读取（缓存） 允许用户通过关键字来搜索，或采用不同的方式来过滤数据（查询索引） 给其它的“处理器”发送消息，使之能够异步执行（流处理） 定期处理大量的数据（批处理） 如果当你听到这些并没有多少感触，那只能说明这些数据系统的抽象很成功：我们虽然每天都在用，但是对他们的认识并不深刻。在构建应用程序时，大多数工程师并不会想着去从头写一个数据存储引擎，因为数据库已经是很好支撑这些功能工具了。
+但事实并没有这么简单。">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="part1">
+<title>Chapter1 | DDIA(第二版)</title>
+<link rel="icon" href="/DDIA-ED2/favicon.png" >
+<link rel="manifest" href="/DDIA-ED2/manifest.json">
+<link rel="canonical" href="http://localhost:1313/DDIA-ED2/part1/chapter1/">
+<link rel="stylesheet" href="/DDIA-ED2/book.min.d124d6c76b11546b04023ef152f0ca77dd5bfd00e1638c75250d60e274cdc189.css" integrity="sha256-0STWx2sRVGsEAj7xUvDKd91b/QDhY4x1JQ1g4nTNwYk=" crossorigin="anonymous">
+
+
+  <script defer src="/DDIA-ED2/fuse.min.js"></script>
+  <script defer src="/DDIA-ED2/en.search.min.da0b2f1ab345f07b4b3884222fe5408265657977493c4ec436966a30a893f14d.js" integrity="sha256-2gsvGrNF8HtLOIQiL&#43;VAgmVleXdJPE7ENpZqMKiT8U0=" crossorigin="anonymous"></script>
+
+  
+</head>
+<body dir="ltr" class="book-kind-page book-type-part1">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    
+<aside class="book-menu">
+  <div class="book-menu-content">
+    
+  <nav>
+<h2 class="book-brand">
+  <a class="flex align-center" href="/DDIA-ED2/"><span>DDIA(第二版)</span>
+  </a>
+</h2>
+
+
+<div class="book-search hidden">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+<script>document.querySelector(".book-search").classList.remove("hidden")</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+
+  </div>
+</aside>
+ 
+
+    <div class="book-page">
+      <header class="book-header hidden">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/DDIA-ED2/icons/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <h3>Chapter1</h3>
+
+  <label for="toc-control">
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  
+<nav id="TableOfContents"></nav>
+
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown book-article"><p><img src="../img/chapter1.png" alt="第一章" /></p>
+<h1 id="第一章可靠性可伸缩性和可维护性">第一章：可靠性、可伸缩性和可维护性<a class="anchor" href="#%e7%ac%ac%e4%b8%80%e7%ab%a0%e5%8f%af%e9%9d%a0%e6%80%a7%e5%8f%af%e4%bc%b8%e7%bc%a9%e6%80%a7%e5%92%8c%e5%8f%af%e7%bb%b4%e6%8a%a4%e6%80%a7">#</a></h1>
+<blockquote class='book-hint '>
+<p>互联网取得了如此伟大的成就，人们习惯于它的存在就如同海洋自然的存在一样，我们甚至都已经忘记它是一个人造的产物。我们甚至都想不到上一次发生如此伟大的技术革命是在什么时候。</p>
+<p>— Alan Kay, 在接受 <a href="https://www.drdobbs.com/architecture-and-design/interview-with-alan-kay/240003442">Dr Dobb’s 期刊采访</a>时说 (2012)</p></blockquote><p>在如今，很多系统都是<strong>数据密集型</strong>（<em>data-intensive</em>）系统，而非<strong>计算密集型</strong>（<em>compute-intensive</em>）。原来的CPU性能已经不再是限制应用的关键因素了—现在更多的问题在于数据的量级，数据的复杂度以及数据的变更的频率。</p>
+<p>数据密集型应用程序通常是基于那些拥有通用的标准功能模块所构建的的系统建立起来的。例如：可能很多应用都需要以下功能：</p>
+<ul>
+<li>存储数据，以便于自己或其它应用在需要的时候再次查找（数据库）</li>
+<li>把复杂开销的操作记录结果记录下来，以便后续能快速的读取（缓存）</li>
+<li>允许用户通过关键字来搜索，或采用不同的方式来过滤数据（查询索引）</li>
+<li>给其它的“处理器”发送消息，使之能够异步执行（流处理）</li>
+<li>定期处理大量的数据（批处理）</li>
+</ul>
+<p>如果当你听到这些并没有多少感触，那只能说明这些数据系统的抽象很成功：我们虽然每天都在用，但是对他们的认识并不深刻。在构建应用程序时，大多数工程师并不会想着去从头写一个数据存储引擎，因为数据库已经是很好支撑这些功能工具了。</p>
+<p>但事实并没有这么简单。</p>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+<div>
+
+</div>
+
+<div>
+
+</div>
+
+</div>
+
+
+
+
+
+
+
+
+
+  <script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script>
+
+
+ 
+        
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+        
+        
+
+ 
+      </footer>
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+
+ 
+  </main>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

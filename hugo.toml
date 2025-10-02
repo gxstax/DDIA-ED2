@@ -1,3 +1,4 @@
 baseURL = 'https://gxstax.github.io/DDIA-ED2/'
 languageCode = 'en-us'
-title = 'My New Hugo Site'
+title = 'DDIA(第二版)'
+theme = 'hugo-book'

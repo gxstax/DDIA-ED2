@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr">
+<head><script src="/DDIA-ED2/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=DDIA-ED2/livereload" data-no-instant defer></script>
+  <!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="
+第六章：分区#
+
+我们必须摆脱计算机既定的规则不被它限制，我们必须先规划好数据怎么设计、优先级怎么定义，然后梳理关系，最后才是编写代码。
+— Grace Murray Hopper, Management and the Computer of the Future (1962)在第五章我们讨论了备份，在不同的节点上有多个拥有相同数据的备份。但是在大规模的数据集或者有着非常大的查询吞吐量的场景中，只有备份显然是不足够的：我们需要将数据分区，或者叫分片。1
+
+
+我们这里所说的分区在MongoDB，Elasticsearch和SolarCloud中通常称为分片。它和HBase中被称为region，BigTable中的tablet，Cassandra和Risk的vnode，Couchbase的vBucket是同样的概念。但是分区是最使用最广泛的称呼，所以我们这里也沿用这个称呼。
+
+通常，分区被定义为每个数据段（每条记录，每一行或每个文档）都只归属于同一个分区。它有各式各样的实现方法，我们会在本章来讨论。实际上，每个分区都是它自己的一个小型数据看，尽管数据库可以支持在同一时间对多个分区同时进行操作。
+我们想要把数据分区的最主要原因就是为了实现「可伸缩性」。在一个非共享的集群中，不同的数据可能会分配到不同的节点上（详情参见 第二部分 中对 shared nothing 的定义）。因此，大型数据库一般都会部署在多个磁盘上，这样查询也就会负载到多个处理进程中。
+对于在单一分区上的查询操作，每个节点都可以独立的在它所在的分区上完成查询操作，所以，可以通过增加更多的节点来提高查询吞吐量。大型复杂的查询操作也可以把他们看作隐性的并行在不同的节点之上，尽管这看上去会变得复杂一些。
+分区数据库是在19世纪80年代开创的，像Teradata 和 Tandem NonStop SQL，以及最近被提及到的 NoSql数据库和基于Hadoop的数据库都属于这类数据库。一些系统的设计目的是事务处理，一些是数据分析（详见 事务处理或分析）：数据库对于这两种不同的处理方式会有不同的处理方式，但是分区对于上述两种情况都适用。
+分区与副本#
+分区通常和副本结合来使用，以便能够将每个副本的数据存储到多个节点上。这也就意味着，即使每条记录只属于一个分区，它仍然能够存储在不同的服务节点上，以此来达到故障转移的目的。
+一个节点上通常存储多于一个分区的数据，如果使用的是「主-从复制」模式，那么分区和副本结合的方式就如同图6-1 所示。每个分区的领导者副本都分别被分配到了一个的节点上，而它的追随者副本则被分配到其它的节点上。每个分区都包括一些分区的领导者副本以及其它分区的追随者副本。
+所有我们在第五章讨论的关于数据库副本的理论都适用于这里的分区副本。但是分区方案的选择是不依赖于副本方案的，所以在本章中我们要忽略掉之前副本机制的干扰，尽量让事情变得简洁。
+
+图6-1. 副本和分区的组合。每个节点的一个分区分别充当其它节点追随者分区的领导者。">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#343a40">
+<meta name="color-scheme" content="light dark"><meta property="og:url" content="http://localhost:1313/DDIA-ED2/part2/chapter6/">
+  <meta property="og:site_name" content="DDIA(第二版)">
+  <meta property="og:title" content="DDIA(第二版)">
+  <meta property="og:description" content="第六章：分区# 我们必须摆脱计算机既定的规则不被它限制，我们必须先规划好数据怎么设计、优先级怎么定义，然后梳理关系，最后才是编写代码。 — Grace Murray Hopper, Management and the Computer of the Future (1962)
+在第五章我们讨论了备份，在不同的节点上有多个拥有相同数据的备份。但是在大规模的数据集或者有着非常大的查询吞吐量的场景中，只有备份显然是不足够的：我们需要将数据分区，或者叫分片。1
+我们这里所说的分区在MongoDB，Elasticsearch和SolarCloud中通常称为分片。它和HBase中被称为region，BigTable中的tablet，Cassandra和Risk的vnode，Couchbase的vBucket是同样的概念。但是分区是最使用最广泛的称呼，所以我们这里也沿用这个称呼。
+通常，分区被定义为每个数据段（每条记录，每一行或每个文档）都只归属于同一个分区。它有各式各样的实现方法，我们会在本章来讨论。实际上，每个分区都是它自己的一个小型数据看，尽管数据库可以支持在同一时间对多个分区同时进行操作。
+我们想要把数据分区的最主要原因就是为了实现「可伸缩性」。在一个非共享的集群中，不同的数据可能会分配到不同的节点上（详情参见 第二部分 中对 shared nothing 的定义）。因此，大型数据库一般都会部署在多个磁盘上，这样查询也就会负载到多个处理进程中。
+对于在单一分区上的查询操作，每个节点都可以独立的在它所在的分区上完成查询操作，所以，可以通过增加更多的节点来提高查询吞吐量。大型复杂的查询操作也可以把他们看作隐性的并行在不同的节点之上，尽管这看上去会变得复杂一些。
+分区数据库是在19世纪80年代开创的，像Teradata 和 Tandem NonStop SQL，以及最近被提及到的 NoSql数据库和基于Hadoop的数据库都属于这类数据库。一些系统的设计目的是事务处理，一些是数据分析（详见 事务处理或分析）：数据库对于这两种不同的处理方式会有不同的处理方式，但是分区对于上述两种情况都适用。
+分区与副本# 分区通常和副本结合来使用，以便能够将每个副本的数据存储到多个节点上。这也就意味着，即使每条记录只属于一个分区，它仍然能够存储在不同的服务节点上，以此来达到故障转移的目的。
+一个节点上通常存储多于一个分区的数据，如果使用的是「主-从复制」模式，那么分区和副本结合的方式就如同图6-1 所示。每个分区的领导者副本都分别被分配到了一个的节点上，而它的追随者副本则被分配到其它的节点上。每个分区都包括一些分区的领导者副本以及其它分区的追随者副本。
+所有我们在第五章讨论的关于数据库副本的理论都适用于这里的分区副本。但是分区方案的选择是不依赖于副本方案的，所以在本章中我们要忽略掉之前副本机制的干扰，尽量让事情变得简洁。
+图6-1. 副本和分区的组合。每个节点的一个分区分别充当其它节点追随者分区的领导者。">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="part2">
+<title>Chapter6 | DDIA(第二版)</title>
+<link rel="icon" href="/DDIA-ED2/favicon.png" >
+<link rel="manifest" href="/DDIA-ED2/manifest.json">
+<link rel="canonical" href="http://localhost:1313/DDIA-ED2/part2/chapter6/">
+<link rel="stylesheet" href="/DDIA-ED2/book.min.d124d6c76b11546b04023ef152f0ca77dd5bfd00e1638c75250d60e274cdc189.css" integrity="sha256-0STWx2sRVGsEAj7xUvDKd91b/QDhY4x1JQ1g4nTNwYk=" crossorigin="anonymous">
+
+
+  <script defer src="/DDIA-ED2/fuse.min.js"></script>
+  <script defer src="/DDIA-ED2/en.search.min.da0b2f1ab345f07b4b3884222fe5408265657977493c4ec436966a30a893f14d.js" integrity="sha256-2gsvGrNF8HtLOIQiL&#43;VAgmVleXdJPE7ENpZqMKiT8U0=" crossorigin="anonymous"></script>
+
+  
+</head>
+<body dir="ltr" class="book-kind-page book-type-part2">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    
+<aside class="book-menu">
+  <div class="book-menu-content">
+    
+  <nav>
+<h2 class="book-brand">
+  <a class="flex align-center" href="/DDIA-ED2/"><span>DDIA(第二版)</span>
+  </a>
+</h2>
+
+
+<div class="book-search hidden">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+<script>document.querySelector(".book-search").classList.remove("hidden")</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+
+  </div>
+</aside>
+ 
+
+    <div class="book-page">
+      <header class="book-header hidden">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/DDIA-ED2/icons/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <h3>Chapter6</h3>
+
+  <label for="toc-control">
+    
+    <img src="/DDIA-ED2/icons/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#分区与副本"><strong>分区与副本</strong></a></li>
+    <li><a href="#键-值数据分区"><strong>键-值数据分区</strong></a>
+      <ul>
+        <li><a href="#基于key值区间分区"><strong>基于key值区间分区</strong></a></li>
+        <li><a href="#基于key的哈希值分区"><strong>基于key的哈希值分区</strong></a></li>
+        <li><a href="#负载偏斜与分区热点"><strong>负载偏斜与分区热点</strong></a></li>
+      </ul>
+    </li>
+    <li><a href="#分区与二级索引"><strong>分区与二级索引</strong></a>
+      <ul>
+        <li><a href="#基于文档二级索引分区"><strong>基于文档二级索引分区</strong></a></li>
+        <li><a href="#基于关键字二级索引分区"><strong>基于关键字二级索引分区</strong></a></li>
+      </ul>
+    </li>
+    <li><a href="#分区重平衡"><strong>分区重平衡</strong></a>
+      <ul>
+        <li><a href="#动态再平衡"><strong>动态再平衡</strong></a></li>
+        <li><a href="#运维自动还是手动重平衡"><strong>运维：自动还是手动重平衡</strong></a></li>
+      </ul>
+    </li>
+    <li><a href="#请求路由"><strong>请求路由</strong></a>
+      <ul>
+        <li><a href="#并行查询"><strong>并行查询</strong></a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown book-article"><p><img src="../img/chapter6.png" alt="ch6" /></p>
+<h1 id="第六章分区">第六章：分区<a class="anchor" href="#%e7%ac%ac%e5%85%ad%e7%ab%a0%e5%88%86%e5%8c%ba">#</a></h1>
+<blockquote class='book-hint '>
+<p>我们必须摆脱计算机既定的规则不被它限制，我们必须先规划好数据怎么设计、优先级怎么定义，然后梳理关系，最后才是编写代码。
+— Grace Murray Hopper, <em>Management and the Computer of the Future</em> (1962)</p></blockquote><p>在<a href="chapter5.md">第五章</a>我们讨论了备份，在不同的节点上有多个拥有相同数据的备份。但是在大规模的数据集或者有着非常大的查询吞吐量的场景中，只有备份显然是不足够的：我们需要将数据分区，或者叫分片。<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup></p>
+<hr>
+<!-- raw HTML omitted -->
+<p><!-- raw HTML omitted -->我们这里所说的分区在MongoDB，Elasticsearch和SolarCloud中通常称为分片。它和HBase中被称为region，BigTable中的tablet，Cassandra和Risk的vnode，Couchbase的vBucket是同样的概念。但是分区是最使用最广泛的称呼，所以我们这里也沿用这个称呼。<!-- raw HTML omitted --></p>
+<hr>
+<p>通常，分区被定义为每个数据段（每条记录，每一行或每个文档）都只归属于同一个分区。它有各式各样的实现方法，我们会在本章来讨论。实际上，每个分区都是它自己的一个小型数据看，尽管数据库可以支持在同一时间对多个分区同时进行操作。</p>
+<p>我们想要把数据分区的最主要原因就是为了实现「<strong>可伸缩性</strong>」。在一个非共享的集群中，不同的数据可能会分配到不同的节点上（详情参见 <a href="#part2.md">第二部分</a> 中对 <em>shared nothing</em> 的定义）。因此，大型数据库一般都会部署在多个磁盘上，这样查询也就会负载到多个处理进程中。</p>
+<p>对于在单一分区上的查询操作，每个节点都可以独立的在它所在的分区上完成查询操作，所以，可以通过增加更多的节点来提高查询吞吐量。大型复杂的查询操作也可以把他们看作隐性的并行在不同的节点之上，尽管这看上去会变得复杂一些。</p>
+<p>分区数据库是在19世纪80年代开创的，像Teradata 和 Tandem NonStop SQL，以及最近被提及到的 NoSql数据库和基于Hadoop的数据库都属于这类数据库。一些系统的设计目的是事务处理，一些是数据分析（详见 <a href="#part3.md">事务处理或分析</a>）：数据库对于这两种不同的处理方式会有不同的处理方式，但是分区对于上述两种情况都适用。</p>
+<h2 id="分区与副本"><strong>分区与副本</strong><a class="anchor" href="#%e5%88%86%e5%8c%ba%e4%b8%8e%e5%89%af%e6%9c%ac">#</a></h2>
+<p>分区通常和副本结合来使用，以便能够将每个副本的数据存储到多个节点上。这也就意味着，即使每条记录只属于一个分区，它仍然能够存储在不同的服务节点上，以此来达到故障转移的目的。</p>
+<p>一个节点上通常存储多于一个分区的数据，如果使用的是「主-从复制」模式，那么分区和副本结合的方式就如同<a href="#figure6-1"><!-- raw HTML omitted --><strong>图6-1</strong><!-- raw HTML omitted --></a> 所示。每个分区的领导者副本都分别被分配到了一个的节点上，而它的追随者副本则被分配到其它的节点上。每个分区都包括一些分区的领导者副本以及其它分区的追随者副本。</p>
+<p>所有我们在<a href="#chapter5.md">第五章</a>讨论的关于数据库副本的理论都适用于这里的分区副本。但是分区方案的选择是不依赖于副本方案的，所以在本章中我们要忽略掉之前副本机制的干扰，尽量让事情变得简洁。</p>
+<p><img src="../img/figure6-1.png" alt="chapter6-1" /></p>
+<p><!-- raw HTML omitted --><!-- raw HTML omitted --><strong>图6-1.</strong><!-- raw HTML omitted --><!-- raw HTML omitted --> 副本和分区的组合。每个节点的一个分区分别充当其它节点追随者分区的领导者。</p>
+<h2 id="键-值数据分区"><strong>键-值数据分区</strong><a class="anchor" href="#%e9%94%ae-%e5%80%bc%e6%95%b0%e6%8d%ae%e5%88%86%e5%8c%ba">#</a></h2>
+<p>假设现在你想要把一大批数据进行分区。那么你怎样确定哪些记录存放到哪些节点上呢？</p>
+<p>我们进行分区的目标就在于能够均匀的分布数据以此来实现查询操作均衡的负载到各个节点上。如果每个节点都均匀的分布一部分数据，理论上10个节点会是单个节点承载读写吞吐量的10倍（这里忽略复制的消耗）。</p>
+<p>如果分区不均衡，则一些分区的数据会多于其它分区或者一些分区的查询量多于其它分区，我们称之为<strong>偏斜（<em>skewed</em>）</strong>。<strong>偏斜</strong>的出现会使得分区的效果大打折扣。极端情况下，所有的负载都命中同一个分区，那么我们10个分区中的9个就是无意义的，所以你的性能瓶颈就集中在这个单一的分区。像这种负载比率较高的分区我们称之为<strong>热点（<em>hot spot</em>）</strong>。</p>
+<p>解决<strong>热点</strong>问题最简单的方法就是我们把记录随机的分配到不同的节点上。这样我们就会将数据十分均匀的分发到各个节点上，但是这样做有一个弊端：当你试图读取特定的记录时，就没有办法确定这条记录具体存储在哪个节点上，导致我们必须查询所有的节点才能将该数据查出来。</p>
+<p>我们可以优化一下，假设我们现在的数据是一个总是通过主键来索引数据的简单的<strong>键-值</strong>数据模型。例如，一本老式的纸质百科全书，你可以通过标题来查找内容；当把所有的标题按照字母顺序排列好后，你就可以快速的找到你想要查询的条目内容。</p>
+<h3 id="基于key值区间分区"><strong>基于key值区间分区</strong><a class="anchor" href="#%e5%9f%ba%e4%ba%8ekey%e5%80%bc%e5%8c%ba%e9%97%b4%e5%88%86%e5%8c%ba">#</a></h3>
+<p>分区的一种方式是指定一系列连续的key值（从最小值到最大值）分配给每一个分区，就像纸质百科全书一样（<a href="#figure6-2"><!-- raw HTML omitted --><strong>图6-2</strong><!-- raw HTML omitted --></a>）。如果你知道每个分区key值的分界线，那么就可以很轻松的知道某个分区被分配到哪个节点上，那么你就可以直接请求这个节点就可以了（就如果从书架上挑选百科全书一样简单）。</p>
+<p><img src="../img/figure6-2.png" alt="figure6-2" /></p>
+<p><!-- raw HTML omitted --><!-- raw HTML omitted --><strong>图6-2.</strong><!-- raw HTML omitted --><!-- raw HTML omitted --> 按照key值范围分配的百科全书。</p>
+<p>所有的key值未必会被均匀的分布，因为你的数据本身未必是均匀分布的。例如，在<a href="#figure6-2"><!-- raw HTML omitted --><strong>图6-2</strong><!-- raw HTML omitted --></a>中，第1卷中包含的字母为A和B，但是第12卷则包含了以T,U,V,W开始直到Z的所有字母。就是因为有这种只包含两个字母的存储卷存在，就会导致会有一些比其它卷的存储数据要大很多的卷。所以为了能够均匀的分布数据，分区边界要依赖数据本身的特点来分布。</p>
+<p>分区的边界可以有管理员手动指定，或者由数据库自动选择（我们会在<a href="#%e5%88%86%e5%8c%ba%e9%87%8d%e5%b9%b3%e8%a1%a1">分区重平衡</a>详细的讲解分区边界的限定）。</p>
+<p>这种分区策略应用在了Bigtable，像以它为衍生出来的HBase[<a href="#ch6References2">2</a>, <a href="#ch6References3">3</a>]，RethinkDB以及版本2.4之前的mongoDB[<a href="#ch6References4">4</a>]。</p>
+<p>在分区内部，我们可以按照一定的顺序来保存key值（参见<a href="#">SSTables and LSM Trees</a>）。这样的做法对范围查找来说会很有优势，由于key值是一系列连续的关联值，所以我们能够在一次查询中把多条相关的记录一并查询出来（参见<a href="../part1/chapter2.md#%e5%a4%9a%e5%88%97%e7%b4%a2%e5%bc%95">多列索引</a>）。例如，如果你的应用存储的是来自网络或传感器的以时间序列为维度的数据（年-月-日-时-分-秒）。那么范围查找在这个案例中就会非常适用，因为这能够让我们可以非常轻松的获取到某个特定月份的数据。</p>
+<p>但是，按键值范围分区的一个缺点就是在某些访问模式下可能会产生热点问题。如果我们把时间戳当作key值来存储，那么分区就符合时间范围的特点-比如每天一个分区。不幸的是，我们是根据当前发生的时间从传感器上读取数据然后写入数据库的，所以所有的写入最终都会落到同一个分区（当前时间分区），所以就会出现当前这个分区负载很高而其它分区处于空闲状态<a href="#ch6References5">5</a>。</p>
+<p>为了避免在像传感器数值记录这样的数据库中发生此问题，我们必须使用时间戳以外的其它东西来作为生成键值的第一要素。例如，你可以在时间戳的前面加上传感器名称，这样就可以先按照传感器名字再按照时间戳来分区。假设同一时间有多个传感器在工作，那么写入操作就会均匀的分布到各个分区上。这样，当你想要查询多个传感器在一定时间范围内的数据时，你需要分别在每个分区上分别执行一个范围查询才行。</p>
+<h3 id="基于key的哈希值分区"><strong>基于key的哈希值分区</strong><a class="anchor" href="#%e5%9f%ba%e4%ba%8ekey%e7%9a%84%e5%93%88%e5%b8%8c%e5%80%bc%e5%88%86%e5%8c%ba">#</a></h3>
+<p>由于「写偏斜」和「热点数据」的原因，很多分布式存储系统会使用一个hash函数来决定给定key的分区。</p>
+<p>一个好的哈希函数可以使得倾斜数据分布更加均匀。假设你有一个接收字符串格式的32位的哈希函数。每当你给出一个新的字符串，它都会随机的返回一个在0 - $2^32$之间数值。即使输入的字符串非常简单，他们的哈希值也会在这个区间内均匀的分布。</p>
+<h3 id="负载偏斜与分区热点"><strong>负载偏斜与分区热点</strong><a class="anchor" href="#%e8%b4%9f%e8%bd%bd%e5%81%8f%e6%96%9c%e4%b8%8e%e5%88%86%e5%8c%ba%e7%83%ad%e7%82%b9">#</a></h3>
+<h2 id="分区与二级索引"><strong>分区与二级索引</strong><a class="anchor" href="#%e5%88%86%e5%8c%ba%e4%b8%8e%e4%ba%8c%e7%ba%a7%e7%b4%a2%e5%bc%95">#</a></h2>
+<h3 id="基于文档二级索引分区"><strong>基于文档二级索引分区</strong><a class="anchor" href="#%e5%9f%ba%e4%ba%8e%e6%96%87%e6%a1%a3%e4%ba%8c%e7%ba%a7%e7%b4%a2%e5%bc%95%e5%88%86%e5%8c%ba">#</a></h3>
+<h3 id="基于关键字二级索引分区"><strong>基于关键字二级索引分区</strong><a class="anchor" href="#%e5%9f%ba%e4%ba%8e%e5%85%b3%e9%94%ae%e5%ad%97%e4%ba%8c%e7%ba%a7%e7%b4%a2%e5%bc%95%e5%88%86%e5%8c%ba">#</a></h3>
+<h2 id="分区重平衡"><strong>分区重平衡</strong><a class="anchor" href="#%e5%88%86%e5%8c%ba%e9%87%8d%e5%b9%b3%e8%a1%a1">#</a></h2>
+<h3 id="动态再平衡"><strong>动态再平衡</strong><a class="anchor" href="#%e5%8a%a8%e6%80%81%e5%86%8d%e5%b9%b3%e8%a1%a1">#</a></h3>
+<h3 id="运维自动还是手动重平衡"><strong>运维：自动还是手动重平衡</strong><a class="anchor" href="#%e8%bf%90%e7%bb%b4%e8%87%aa%e5%8a%a8%e8%bf%98%e6%98%af%e6%89%8b%e5%8a%a8%e9%87%8d%e5%b9%b3%e8%a1%a1">#</a></h3>
+<h2 id="请求路由"><strong>请求路由</strong><a class="anchor" href="#%e8%af%b7%e6%b1%82%e8%b7%af%e7%94%b1">#</a></h2>
+<h3 id="并行查询"><strong>并行查询</strong><a class="anchor" href="#%e5%b9%b6%e8%a1%8c%e6%9f%a5%e8%af%a2">#</a></h3>
+<div class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1">
+<p>Partitioning, as discussed in this chapter, is a way of intentionally breaking a large database down into smaller ones. It has nothing to do with <em>network partitions</em> (netsplits), a type of fault in the network betweennodes. We will discuss such faults in <a href="chapter8.md">Chapter 8</a>.&#160;<a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</div>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+<div>
+
+</div>
+
+<div>
+
+</div>
+
+</div>
+
+
+
+
+
+
+
+
+
+  <script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script>
+
+
+ 
+        
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+        
+        
+
+ 
+      </footer>
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+
+<aside class="book-toc">
+  <div class="book-toc-content">
+    
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#分区与副本"><strong>分区与副本</strong></a></li>
+    <li><a href="#键-值数据分区"><strong>键-值数据分区</strong></a>
+      <ul>
+        <li><a href="#基于key值区间分区"><strong>基于key值区间分区</strong></a></li>
+        <li><a href="#基于key的哈希值分区"><strong>基于key的哈希值分区</strong></a></li>
+        <li><a href="#负载偏斜与分区热点"><strong>负载偏斜与分区热点</strong></a></li>
+      </ul>
+    </li>
+    <li><a href="#分区与二级索引"><strong>分区与二级索引</strong></a>
+      <ul>
+        <li><a href="#基于文档二级索引分区"><strong>基于文档二级索引分区</strong></a></li>
+        <li><a href="#基于关键字二级索引分区"><strong>基于关键字二级索引分区</strong></a></li>
+      </ul>
+    </li>
+    <li><a href="#分区重平衡"><strong>分区重平衡</strong></a>
+      <ul>
+        <li><a href="#动态再平衡"><strong>动态再平衡</strong></a></li>
+        <li><a href="#运维自动还是手动重平衡"><strong>运维：自动还是手动重平衡</strong></a></li>
+      </ul>
+    </li>
+    <li><a href="#请求路由"><strong>请求路由</strong></a>
+      <ul>
+        <li><a href="#并行查询"><strong>并行查询</strong></a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+
+  </div>
+</aside>
+
+ 
+  </main>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

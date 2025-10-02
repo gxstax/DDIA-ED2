@@ -1,0 +1,15 @@
+{
+  "name": "DDIA(第二版)",
+  "short_name": "DDIA(第二版)",
+  "start_url": "/DDIA-ED2/",
+  "scope": "/DDIA-ED2/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "/DDIA-ED2/favicon.svg",
+      "sizes": "512x512"
+    }
+  ]
+}

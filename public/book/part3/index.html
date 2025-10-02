@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/DDIA-ED2/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=DDIA-ED2/livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>第三部分：派生数据 | My New Hugo Site</title>
+<meta name="keywords" content="">
+<meta name="description" content="第三部分：派生数据">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/DDIA-ED2/book/part3/">
+<link crossorigin="anonymous" href="/DDIA-ED2/assets/css/stylesheet.a090830a421002426baafbd314e38f149d77b4c48a12ee9312700d770b27fb26.css" integrity="sha256-oJCDCkIQAkJrqvvTFOOPFJ13tMSKEu6TEnANdwsn&#43;yY=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/DDIA-ED2/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/DDIA-ED2/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/DDIA-ED2/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/DDIA-ED2/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/DDIA-ED2/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" type="application/rss+xml" href="http://localhost:1313/DDIA-ED2/book/part3/index.xml" title="rss">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/DDIA-ED2/book/part3/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="list" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/DDIA-ED2/" accesskey="h" title="My New Hugo Site (Alt + H)">My New Hugo Site</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+        </ul>
+    </nav>
+</header>
+<main class="main"> 
+<header class="page-header">
+  <h1>
+    第三部分：派生数据
+  </h1>
+</header>
+<div class="post-content"><h1 id="第三部分派生数据">第三部分：派生数据<a hidden class="anchor" aria-hidden="true" href="#第三部分派生数据">#</a></h1>
+
+
+</div>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>
+第十章：批处理 一个受个体影响太深的系统是不可能成功的，当一个系统完成初始化设计并成功开始运行，它真正的考验也就开始了，因为使用的时候都是依据自己的经验和观点来使用。
+— 高德纳
+</p>
+  </div>
+  <footer class="entry-footer"></footer>
+  <a class="entry-link" aria-label="post link to " href="http://localhost:1313/DDIA-ED2/book/part3/chapter10/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>
+第十一章：流处理 复杂的系统都是从简单的系统演进而来的，从另一个角度来说，开始就很复杂的系统是根本不会被设计出来的。
+— 约翰·加尔, Systemantics (1975)
+</p>
+  </div>
+  <footer class="entry-footer"></footer>
+  <a class="entry-link" aria-label="post link to " href="http://localhost:1313/DDIA-ED2/book/part3/chapter11/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>
+第十二章：数据系统展望 复杂的系统都是从简单的系统演进而来的，从另一个角度来说，开始就很复杂的系统是根本不会被设计出来的。
+— 约翰·加尔, Systemantics (1975)
+早起发布读者须知
+作为早期发布电子书，您可获取书籍的最初版本——作者写作时的原始未编辑内容——因此您能够早在这些书籍正式发布之前，就充分利用这些技术内容。
+这将是本书终版的第十二章。本书的GitHub代码库位于 https://github.com/ept/ddia2-feedback.
+若您希望积极参与此版草稿的审阅与评论工作，请通过GitHub联系我们。 在第十一章中我们讨论了批处理-它是将一组文件作为输出然后在产出一组新的文件的技术。输出是派生数据（derived data）的一种形式；运行在批处理流程中的数据在必要的时候是可以再次生成的。我们了解到了这一简单却强大的理念是如何被应用于构建搜索索引、推荐系统、分析工具等领域。
+但是，在第十一章中我们始终假设的一个命题是：输入是有边界的-即已知且有限的大小-所以批处理程序知道它何时完成了输入信息的读取。例如MapReduce的核心排序操作必须完整的读取所有的输入后才能开始输出结果：这就有可能会发生一个很小的键值数据记录很晚才被输入，因为这个小键值记录需要我们第一个输出，所以我们的输出不能很早进行（要等待这个最小键值输入后才能开始输出操作）。
+实际上，很多数据之所以无边界是因为它们是随着时间的推移慢慢到达的：你的用户昨天和今天产生了数据，它明天还会继续产生更多的数据。除非你歇业，否者这个过程永远不会停止，所以在一定意义上，数据集从来不会有“完成（complete）”态[1]。因此，批处理程序必须人工的将数据划分为固定区间的数据块：例如：在每天结束的时候处理一天的有效数据，或者在每个小时结束后处理这一小时的有效数据。
+以天为维度的批处理问题在于输入数据的变化只有在一天后才会对输出的结果有影响，这对很多急性子的用户来说太慢了。为了减少延迟，我们可以更频繁的执行批处理程序-例如每一秒都执行一次来处理上一秒的有效数据，甚至于说连续的，完全不划分固定区间，每个事件来临就立即处理。这便是「流处理」（stream processing）背后的思想。
+通常，“流”指的是随着时间推移而逐渐可用的数据。这个概念出现在很多地方：在Unix的标准输入（stdin）和标准输出（stdout）中，编程语言（lazy lists）[],文件系统API（例如Java的FileInputStream），TCP连接，通过互联网传输的音频和视频等等。
+本章，我们将把事件流（event streams）视为一种数据管理机制：一种对应于我们上一章所介绍的，一种无界的，持续增量处理的批数据处理方式。我们首先会讨论流在网络中怎样表示、存储和传输。在“数据库与流”中我们会讨论流和数据库之间的联系。最后，在“流处理”中,我们会继续探讨处理这些流的方法和工具，以及它们用来构建应用的方式。
+传输事件流 在批处理的世界，
+</p>
+  </div>
+  <footer class="entry-footer"></footer>
+  <a class="entry-link" aria-label="post link to " href="http://localhost:1313/DDIA-ED2/book/part3/chapter12/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>第三部分：派生数据</p>
+  </div>
+  <footer class="entry-footer"></footer>
+  <a class="entry-link" aria-label="post link to " href="http://localhost:1313/DDIA-ED2/book/part3/readme/"></a>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="http://localhost:1313/DDIA-ED2/">My New Hugo Site</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>

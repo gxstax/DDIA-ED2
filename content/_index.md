@@ -1,0 +1,28 @@
+---
+title: "目录"
+layout: toc
+
+---
+
+# 图书目录
+
+* [简介](README.md)
+* [前言](Preface.md)
+* [第一部分：数据系统基本原理]({{< relref "part1/_index.md" >}})
+    * [第一章：可靠、可伸缩以及易维护系统]({{< relref "part1/chapter1.md" >}})
+    * [第二章：数据模型与查询语言]({{< relref "part1/chapter2.md" >}})
+    * [第三章：存储与检索]({{< relref "part1/chapter3.md" >}})
+    * [第四章：编码及演进]({{< relref "part1/chapter4.md" >}})
+* [第二部分：分布式数据]({{< relref "part2/README.md" >}})
+    * [第五章：备份]({{< relref "part2/chapter5.md" >}})
+    * [第六章：分区]({{< relref "part2/chapter6.md" >}})
+    * [第七章：事务]({{< relref "part2/chapter7.md" >}})
+    * [第八章：分布式系统面临的的问题]({{< relref "part2/chapter8.md" >}})
+    * [第九章：一致性]({{< relref "part2/chapter9.md" >}})
+* [第三部分：派生数据]({{< relref "part3/README.md" >}})
+    * [第十章：批处理]({{< relref "part3/chapter10.md" >}})
+    * [第十一章：流处理]({{< relref "part3/chapter11.md" >}})
+    * [第十二章：数据系统前景]({{< relref "part3/chapter12.md" >}})
+* [术语表](Glossary.md)
+* [索引](Indexs.md)
+* [关于作者](about_the_author.md)

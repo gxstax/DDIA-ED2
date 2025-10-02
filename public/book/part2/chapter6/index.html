@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/DDIA-ED2/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=DDIA-ED2/livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>My New Hugo Site</title>
+<meta name="keywords" content="">
+<meta name="description" content="
+第六章：分区
+
+我们必须摆脱计算机既定的规则不被它限制，我们必须先规划好数据怎么设计、优先级怎么定义，然后梳理关系，最后才是编写代码。
+— Grace Murray Hopper, Management and the Computer of the Future (1962)
+在第五章我们讨论了备份，在不同的节点上有多个拥有相同数据的备份。但是在大规模的数据集或者有着非常大的查询吞吐量的场景中，只有备份显然是不足够的：我们需要将数据分区，或者叫分片。1
+
+
+我们这里所说的分区在MongoDB，Elasticsearch和SolarCloud中通常称为分片。它和HBase中被称为region，BigTable中的tablet，Cassandra和Risk的vnode，Couchbase的vBucket是同样的概念。但是分区是最使用最广泛的称呼，所以我们这里也沿用这个称呼。
+
+通常，分区被定义为每个数据段（每条记录，每一行或每个文档）都只归属于同一个分区。它有各式各样的实现方法，我们会在本章来讨论。实际上，每个分区都是它自己的一个小型数据看，尽管数据库可以支持在同一时间对多个分区同时进行操作。
+我们想要把数据分区的最主要原因就是为了实现「可伸缩性」。在一个非共享的集群中，不同的数据可能会分配到不同的节点上（详情参见 第二部分 中对 shared nothing 的定义）。因此，大型数据库一般都会部署在多个磁盘上，这样查询也就会负载到多个处理进程中。
+对于在单一分区上的查询操作，每个节点都可以独立的在它所在的分区上完成查询操作，所以，可以通过增加更多的节点来提高查询吞吐量。大型复杂的查询操作也可以把他们看作隐性的并行在不同的节点之上，尽管这看上去会变得复杂一些。
+分区数据库是在19世纪80年代开创的，像Teradata 和 Tandem NonStop SQL，以及最近被提及到的 NoSql数据库和基于Hadoop的数据库都属于这类数据库。一些系统的设计目的是事务处理，一些是数据分析（详见 事务处理或分析）：数据库对于这两种不同的处理方式会有不同的处理方式，但是分区对于上述两种情况都适用。
+分区与副本
+分区通常和副本结合来使用，以便能够将每个副本的数据存储到多个节点上。这也就意味着，即使每条记录只属于一个分区，它仍然能够存储在不同的服务节点上，以此来达到故障转移的目的。
+一个节点上通常存储多于一个分区的数据，如果使用的是「主-从复制」模式，那么分区和副本结合的方式就如同图6-1 所示。每个分区的领导者副本都分别被分配到了一个的节点上，而它的追随者副本则被分配到其它的节点上。每个分区都包括一些分区的领导者副本以及其它分区的追随者副本。
+所有我们在第五章讨论的关于数据库副本的理论都适用于这里的分区副本。但是分区方案的选择是不依赖于副本方案的，所以在本章中我们要忽略掉之前副本机制的干扰，尽量让事情变得简洁。
+
+图6-1. 副本和分区的组合。每个节点的一个分区分别充当其它节点追随者分区的领导者。">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/DDIA-ED2/book/part2/chapter6/">
+<link crossorigin="anonymous" href="/DDIA-ED2/assets/css/stylesheet.a090830a421002426baafbd314e38f149d77b4c48a12ee9312700d770b27fb26.css" integrity="sha256-oJCDCkIQAkJrqvvTFOOPFJ13tMSKEu6TEnANdwsn&#43;yY=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/DDIA-ED2/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/DDIA-ED2/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/DDIA-ED2/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/DDIA-ED2/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/DDIA-ED2/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/DDIA-ED2/book/part2/chapter6/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/DDIA-ED2/" accesskey="h" title="My New Hugo Site (Alt + H)">My New Hugo Site</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      
+    </h1>
+    <div class="post-meta">
+
+</div>
+  </header> 
+  <div class="post-content"><p><img alt="ch6" loading="lazy" src="../img/chapter6.png"></p>
+<h1 id="第六章分区">第六章：分区<a hidden class="anchor" aria-hidden="true" href="#第六章分区">#</a></h1>
+<blockquote>
+<p>我们必须摆脱计算机既定的规则不被它限制，我们必须先规划好数据怎么设计、优先级怎么定义，然后梳理关系，最后才是编写代码。
+— Grace Murray Hopper, <em>Management and the Computer of the Future</em> (1962)</p></blockquote>
+<p>在<a href="chapter5.md">第五章</a>我们讨论了备份，在不同的节点上有多个拥有相同数据的备份。但是在大规模的数据集或者有着非常大的查询吞吐量的场景中，只有备份显然是不足够的：我们需要将数据分区，或者叫分片。<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup></p>
+<hr>
+<!-- raw HTML omitted -->
+<p><!-- raw HTML omitted -->我们这里所说的分区在MongoDB，Elasticsearch和SolarCloud中通常称为分片。它和HBase中被称为region，BigTable中的tablet，Cassandra和Risk的vnode，Couchbase的vBucket是同样的概念。但是分区是最使用最广泛的称呼，所以我们这里也沿用这个称呼。<!-- raw HTML omitted --></p>
+<hr>
+<p>通常，分区被定义为每个数据段（每条记录，每一行或每个文档）都只归属于同一个分区。它有各式各样的实现方法，我们会在本章来讨论。实际上，每个分区都是它自己的一个小型数据看，尽管数据库可以支持在同一时间对多个分区同时进行操作。</p>
+<p>我们想要把数据分区的最主要原因就是为了实现「<strong>可伸缩性</strong>」。在一个非共享的集群中，不同的数据可能会分配到不同的节点上（详情参见 <a href="#part2.md">第二部分</a> 中对 <em>shared nothing</em> 的定义）。因此，大型数据库一般都会部署在多个磁盘上，这样查询也就会负载到多个处理进程中。</p>
+<p>对于在单一分区上的查询操作，每个节点都可以独立的在它所在的分区上完成查询操作，所以，可以通过增加更多的节点来提高查询吞吐量。大型复杂的查询操作也可以把他们看作隐性的并行在不同的节点之上，尽管这看上去会变得复杂一些。</p>
+<p>分区数据库是在19世纪80年代开创的，像Teradata 和 Tandem NonStop SQL，以及最近被提及到的 NoSql数据库和基于Hadoop的数据库都属于这类数据库。一些系统的设计目的是事务处理，一些是数据分析（详见 <a href="#part3.md">事务处理或分析</a>）：数据库对于这两种不同的处理方式会有不同的处理方式，但是分区对于上述两种情况都适用。</p>
+<h2 id="分区与副本"><strong>分区与副本</strong><a hidden class="anchor" aria-hidden="true" href="#分区与副本">#</a></h2>
+<p>分区通常和副本结合来使用，以便能够将每个副本的数据存储到多个节点上。这也就意味着，即使每条记录只属于一个分区，它仍然能够存储在不同的服务节点上，以此来达到故障转移的目的。</p>
+<p>一个节点上通常存储多于一个分区的数据，如果使用的是「主-从复制」模式，那么分区和副本结合的方式就如同<a href="#figure6-1"><!-- raw HTML omitted --><strong>图6-1</strong><!-- raw HTML omitted --></a> 所示。每个分区的领导者副本都分别被分配到了一个的节点上，而它的追随者副本则被分配到其它的节点上。每个分区都包括一些分区的领导者副本以及其它分区的追随者副本。</p>
+<p>所有我们在<a href="#chapter5.md">第五章</a>讨论的关于数据库副本的理论都适用于这里的分区副本。但是分区方案的选择是不依赖于副本方案的，所以在本章中我们要忽略掉之前副本机制的干扰，尽量让事情变得简洁。</p>
+<p><img alt="chapter6-1" loading="lazy" src="../img/figure6-1.png"></p>
+<p><!-- raw HTML omitted --><!-- raw HTML omitted --><strong>图6-1.</strong><!-- raw HTML omitted --><!-- raw HTML omitted --> 副本和分区的组合。每个节点的一个分区分别充当其它节点追随者分区的领导者。</p>
+<h2 id="键-值数据分区"><strong>键-值数据分区</strong><a hidden class="anchor" aria-hidden="true" href="#键-值数据分区">#</a></h2>
+<p>假设现在你想要把一大批数据进行分区。那么你怎样确定哪些记录存放到哪些节点上呢？</p>
+<p>我们进行分区的目标就在于能够均匀的分布数据以此来实现查询操作均衡的负载到各个节点上。如果每个节点都均匀的分布一部分数据，理论上10个节点会是单个节点承载读写吞吐量的10倍（这里忽略复制的消耗）。</p>
+<p>如果分区不均衡，则一些分区的数据会多于其它分区或者一些分区的查询量多于其它分区，我们称之为<strong>偏斜（<em>skewed</em>）</strong>。<strong>偏斜</strong>的出现会使得分区的效果大打折扣。极端情况下，所有的负载都命中同一个分区，那么我们10个分区中的9个就是无意义的，所以你的性能瓶颈就集中在这个单一的分区。像这种负载比率较高的分区我们称之为<strong>热点（<em>hot spot</em>）</strong>。</p>
+<p>解决<strong>热点</strong>问题最简单的方法就是我们把记录随机的分配到不同的节点上。这样我们就会将数据十分均匀的分发到各个节点上，但是这样做有一个弊端：当你试图读取特定的记录时，就没有办法确定这条记录具体存储在哪个节点上，导致我们必须查询所有的节点才能将该数据查出来。</p>
+<p>我们可以优化一下，假设我们现在的数据是一个总是通过主键来索引数据的简单的<strong>键-值</strong>数据模型。例如，一本老式的纸质百科全书，你可以通过标题来查找内容；当把所有的标题按照字母顺序排列好后，你就可以快速的找到你想要查询的条目内容。</p>
+<h3 id="基于key值区间分区"><strong>基于key值区间分区</strong><a hidden class="anchor" aria-hidden="true" href="#基于key值区间分区">#</a></h3>
+<p>分区的一种方式是指定一系列连续的key值（从最小值到最大值）分配给每一个分区，就像纸质百科全书一样（<a href="#figure6-2"><!-- raw HTML omitted --><strong>图6-2</strong><!-- raw HTML omitted --></a>）。如果你知道每个分区key值的分界线，那么就可以很轻松的知道某个分区被分配到哪个节点上，那么你就可以直接请求这个节点就可以了（就如果从书架上挑选百科全书一样简单）。</p>
+<p><img alt="figure6-2" loading="lazy" src="../img/figure6-2.png"></p>
+<p><!-- raw HTML omitted --><!-- raw HTML omitted --><strong>图6-2.</strong><!-- raw HTML omitted --><!-- raw HTML omitted --> 按照key值范围分配的百科全书。</p>
+<p>所有的key值未必会被均匀的分布，因为你的数据本身未必是均匀分布的。例如，在<a href="#figure6-2"><!-- raw HTML omitted --><strong>图6-2</strong><!-- raw HTML omitted --></a>中，第1卷中包含的字母为A和B，但是第12卷则包含了以T,U,V,W开始直到Z的所有字母。就是因为有这种只包含两个字母的存储卷存在，就会导致会有一些比其它卷的存储数据要大很多的卷。所以为了能够均匀的分布数据，分区边界要依赖数据本身的特点来分布。</p>
+<p>分区的边界可以有管理员手动指定，或者由数据库自动选择（我们会在<a href="#%E5%88%86%E5%8C%BA%E9%87%8D%E5%B9%B3%E8%A1%A1">分区重平衡</a>详细的讲解分区边界的限定）。</p>
+<p>这种分区策略应用在了Bigtable，像以它为衍生出来的HBase[<a href="#ch6References2">2</a>, <a href="#ch6References3">3</a>]，RethinkDB以及版本2.4之前的mongoDB[<a href="#ch6References4">4</a>]。</p>
+<p>在分区内部，我们可以按照一定的顺序来保存key值（参见<a href="#">SSTables and LSM Trees</a>）。这样的做法对范围查找来说会很有优势，由于key值是一系列连续的关联值，所以我们能够在一次查询中把多条相关的记录一并查询出来（参见<a href="../part1/chapter2.md#%E5%A4%9A%E5%88%97%E7%B4%A2%E5%BC%95">多列索引</a>）。例如，如果你的应用存储的是来自网络或传感器的以时间序列为维度的数据（年-月-日-时-分-秒）。那么范围查找在这个案例中就会非常适用，因为这能够让我们可以非常轻松的获取到某个特定月份的数据。</p>
+<p>但是，按键值范围分区的一个缺点就是在某些访问模式下可能会产生热点问题。如果我们把时间戳当作key值来存储，那么分区就符合时间范围的特点-比如每天一个分区。不幸的是，我们是根据当前发生的时间从传感器上读取数据然后写入数据库的，所以所有的写入最终都会落到同一个分区（当前时间分区），所以就会出现当前这个分区负载很高而其它分区处于空闲状态<a href="#ch6References5">5</a>。</p>
+<p>为了避免在像传感器数值记录这样的数据库中发生此问题，我们必须使用时间戳以外的其它东西来作为生成键值的第一要素。例如，你可以在时间戳的前面加上传感器名称，这样就可以先按照传感器名字再按照时间戳来分区。假设同一时间有多个传感器在工作，那么写入操作就会均匀的分布到各个分区上。这样，当你想要查询多个传感器在一定时间范围内的数据时，你需要分别在每个分区上分别执行一个范围查询才行。</p>
+<h3 id="基于key的哈希值分区"><strong>基于key的哈希值分区</strong><a hidden class="anchor" aria-hidden="true" href="#基于key的哈希值分区">#</a></h3>
+<p>由于「写偏斜」和「热点数据」的原因，很多分布式存储系统会使用一个hash函数来决定给定key的分区。</p>
+<p>一个好的哈希函数可以使得倾斜数据分布更加均匀。假设你有一个接收字符串格式的32位的哈希函数。每当你给出一个新的字符串，它都会随机的返回一个在0 - $2^32$之间数值。即使输入的字符串非常简单，他们的哈希值也会在这个区间内均匀的分布。</p>
+<h3 id="负载偏斜与分区热点"><strong>负载偏斜与分区热点</strong><a hidden class="anchor" aria-hidden="true" href="#负载偏斜与分区热点">#</a></h3>
+<h2 id="分区与二级索引"><strong>分区与二级索引</strong><a hidden class="anchor" aria-hidden="true" href="#分区与二级索引">#</a></h2>
+<h3 id="基于文档二级索引分区"><strong>基于文档二级索引分区</strong><a hidden class="anchor" aria-hidden="true" href="#基于文档二级索引分区">#</a></h3>
+<h3 id="基于关键字二级索引分区"><strong>基于关键字二级索引分区</strong><a hidden class="anchor" aria-hidden="true" href="#基于关键字二级索引分区">#</a></h3>
+<h2 id="分区重平衡"><strong>分区重平衡</strong><a hidden class="anchor" aria-hidden="true" href="#分区重平衡">#</a></h2>
+<h3 id="动态再平衡"><strong>动态再平衡</strong><a hidden class="anchor" aria-hidden="true" href="#动态再平衡">#</a></h3>
+<h3 id="运维自动还是手动重平衡"><strong>运维：自动还是手动重平衡</strong><a hidden class="anchor" aria-hidden="true" href="#运维自动还是手动重平衡">#</a></h3>
+<h2 id="请求路由"><strong>请求路由</strong><a hidden class="anchor" aria-hidden="true" href="#请求路由">#</a></h2>
+<h3 id="并行查询"><strong>并行查询</strong><a hidden class="anchor" aria-hidden="true" href="#并行查询">#</a></h3>
+<div class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1">
+<p>Partitioning, as discussed in this chapter, is a way of intentionally breaking a large database down into smaller ones. It has nothing to do with <em>network partitions</em> (netsplits), a type of fault in the network betweennodes. We will discuss such faults in <a href="chapter8.md">Chapter 8</a>.&#160;<a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</div>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="http://localhost:1313/DDIA-ED2/">My New Hugo Site</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>

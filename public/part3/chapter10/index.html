@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr">
+<head><script src="/DDIA-ED2/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=DDIA-ED2/livereload" data-no-instant defer></script>
+  <!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="
+第十章：批处理#
+
+一个受个体影响太深的系统是不可能成功的，当一个系统完成初始化设计并成功开始运行，它真正的考验也就开始了，因为使用的时候都是依据自己的经验和观点来使用。
+— 高德纳">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#343a40">
+<meta name="color-scheme" content="light dark"><meta property="og:url" content="http://localhost:1313/DDIA-ED2/part3/chapter10/">
+  <meta property="og:site_name" content="DDIA(第二版)">
+  <meta property="og:title" content="DDIA(第二版)">
+  <meta property="og:description" content="第十章：批处理# 一个受个体影响太深的系统是不可能成功的，当一个系统完成初始化设计并成功开始运行，它真正的考验也就开始了，因为使用的时候都是依据自己的经验和观点来使用。
+— 高德纳">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="part3">
+<title>Chapter10 | DDIA(第二版)</title>
+<link rel="icon" href="/DDIA-ED2/favicon.png" >
+<link rel="manifest" href="/DDIA-ED2/manifest.json">
+<link rel="canonical" href="http://localhost:1313/DDIA-ED2/part3/chapter10/">
+<link rel="stylesheet" href="/DDIA-ED2/book.min.d124d6c76b11546b04023ef152f0ca77dd5bfd00e1638c75250d60e274cdc189.css" integrity="sha256-0STWx2sRVGsEAj7xUvDKd91b/QDhY4x1JQ1g4nTNwYk=" crossorigin="anonymous">
+
+
+  <script defer src="/DDIA-ED2/fuse.min.js"></script>
+  <script defer src="/DDIA-ED2/en.search.min.da0b2f1ab345f07b4b3884222fe5408265657977493c4ec436966a30a893f14d.js" integrity="sha256-2gsvGrNF8HtLOIQiL&#43;VAgmVleXdJPE7ENpZqMKiT8U0=" crossorigin="anonymous"></script>
+
+  
+</head>
+<body dir="ltr" class="book-kind-page book-type-part3">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    
+<aside class="book-menu">
+  <div class="book-menu-content">
+    
+  <nav>
+<h2 class="book-brand">
+  <a class="flex align-center" href="/DDIA-ED2/"><span>DDIA(第二版)</span>
+  </a>
+</h2>
+
+
+<div class="book-search hidden">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+<script>document.querySelector(".book-search").classList.remove("hidden")</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+
+  </div>
+</aside>
+ 
+
+    <div class="book-page">
+      <header class="book-header hidden">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/DDIA-ED2/icons/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <h3>Chapter10</h3>
+
+  <label for="toc-control">
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  
+<nav id="TableOfContents"></nav>
+
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown book-article"><p><img src="../img/chapter10.png" alt="ch10" /></p>
+<h1 id="第十章批处理">第十章：批处理<a class="anchor" href="#%e7%ac%ac%e5%8d%81%e7%ab%a0%e6%89%b9%e5%a4%84%e7%90%86">#</a></h1>
+<blockquote class='book-hint '>
+<p>一个受个体影响太深的系统是不可能成功的，当一个系统完成初始化设计并成功开始运行，它真正的考验也就开始了，因为使用的时候都是依据自己的经验和观点来使用。</p>
+<p>— 高德纳</p></blockquote></article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+<div>
+
+</div>
+
+<div>
+
+</div>
+
+</div>
+
+
+
+
+
+
+
+
+
+  <script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script>
+
+
+ 
+        
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+        
+        
+
+ 
+      </footer>
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+
+ 
+  </main>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

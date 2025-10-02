@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/DDIA-ED2/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=DDIA-ED2/livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>第二部分：分布式数据 | My New Hugo Site</title>
+<meta name="keywords" content="">
+<meta name="description" content="第二部分：分布式数据
+
+对成功的技术而言，现实必须置于比公共关系更加优先的地位，因为大自然是无法被欺骗的。
+— 理查德·费曼，罗杰斯委员会报告（1986）
+在本书的第一部分，我们讨论了数据存储在单个机器场景的数据系统。在第二部分，我们不妨更进一层，试问：当有多台机器同事对数据进行存储或检索将会发生什么呢？
+以下是把数据库的数据分别放到多台机器上来进行存储的原因：
+
+
+可扩展性:
+如果你的数据体量不断增加，读写负载超过单台机器所能承载的最大值，你可能会把这些负载分摊到多台机器上。
+
+
+容错性/高可用性:
+如果你的应用想要在一台机器（或多台机器，或者网络，或者单个数据中心）故障后仍能继续工作，你可以使用多台机器来为你提供冗余服务。当一个失败后，另外一个可以接管它来执行任务。
+
+
+延迟：
+如果你们的用户遍布世界各地，你可能会希望在世界各地的不同位置都拥有服务器，以便每个用户都可以从一个地理学上更接近他们的数据中心来获得服务。这样就避免了用户需要等待网络包穿越大半个地球才传输过来。
+
+
+应对更高负载的扩展
+如果你只是用来应对高负载，那么最简单的办法就是选用一台更加强劲的机器（这种方式也被称为垂直扩展或升级升级）。多个cpu，多块内存，多个磁盘可以在同一个操作系统下结合使用，快速的连接设备使得cpu可以访问内存或磁盘的任何位置。在这种「共享内存架构」（shared-memory architecture）下，所有的组建都可以看作是一台机器[1]。1
+共享内存的方式存在的一个问题就是，它的花费开销增长曲线比线性架构增长的更快：一个拥有两倍多的CPU，两倍多的内存以及两倍多磁盘容量的机器，它的开销比起单倍的机器通常要多于两倍。
+共享内存体系架构所提供的「容错性」是有限的—高端的机器一般都支持热插拔组建（你可以在不关闭电源的情况下来更换硬盘、内存、甚至是CPU）—但这也仅限于在同一地理位置范围内。
+另外一种是共享磁盘架构，它使用多台具有独立CPU和内存的机器，但是存储数据的磁盘阵列是被所有机器共享的，他们之间通过快速网络来进行连接。2这种架构适用于一些数据仓库场景，但是争用和锁开销限制了共享磁盘架构的可伸缩性[2]。
+无共享架构
+相比之下，「无共享架构」[3]（有时也称为水平扩展或向外扩展）要更加受青睐。在这种架构下，每一台运行着数据库软件的机器或虚拟机都被称为一个「节点」。每一个节点的CPU，内存和磁盘都是独立的。节点与节点之间也是通过传统的网络在软件层面进行协调。
+「无共享架构」对硬件没有特殊的要求，因此你可以选用架构更合适性价比更高的机器。你可以在多个不同的物理地址之间分发数据，这样可以有效的避免用户请求延迟的问题，而且当一个物理位置的数据中心崩溃后，另外一个能有效的存活下来。随着虚拟机的云部署，你不需要拥有像Google这样级别的运维能力：即使再小的公司，也可以轻松的构建异地多活分布式架构。
+在本书的这一部分，我们关注于「无共享架构」，尽管它可能不是我们所有应用场景中的最佳选择，但是对于我们，作为一个应用开发者来说是很值得我们去审慎对待的。如果你的数据是跨多个节点分区部署的，你要意识到数据库在这中间所做的规范以及权衡性措施—数据库不会平白无故的就帮助你完成这些事情。
+虽然分布式的「无共享架构」有很多优点，但它同时也增加了应用的复杂性，有时候甚至会限制你所使用数据模型的表达能力。有时候，一个简单的单线程程序可能拥有比100核CPU的集群更好的性能表现[4]。不过，「无共享系统」的能力还是非常强大的。我们将在接下来的几章来详细介绍数据在分布式存储时可能遇到的问题。
+
+副本/分区
+使得数据分布在多个不同的节点一般有两种比较通用的方式：
+
+
+副本
+在可能分布在不同地理位置的不同节点上保存相同的数据副本。提供冗余复制：当一些节点不可用时，其它数据节点还可以继续提供服务。副本机制还有助于提升性能。我们将在 第五章 来讨论「副本」。
+
+
+分区
+把一个大的数据库分解为更小的数据集称做「分区」，所以不同的分区可以看作是不同的节点（也可称为分片-sharding）。我们将在 第六章 来讨论「分区」。
+
+
+虽说这些都是一些独立的特性，但往往他们可以同时使用。如图II-1所示：
+
+图II-1.一个拥有两个分区，每个分区有两个副本的数据库。
+理解了这些概念，我们可以讨论在分布式系统中所面临的困境以及在处理这些问题过程中所做的权衡。我们会在第七章 中讨论事务，这将会帮助你理解在分布式数据系统中可能出错的地方和原因以及我们怎么去避免这些错误。我们将在 第八章 和 第九章 中讨论分布式数据系统基本局限性来结束这一部分的内容。
+后面，我们会在本书的 第三部分来讨论如果把多个数据仓库系统（有可能是分布式的）合并到一个更大的系统中，以此来满足更复杂应用的需求。但前提是，我们得闲讨论分布式数据。
+参考文献
+[1] Ulrich Drepper: “What Every Programmer Should Know About Memory,” akka‐dia.org, November 21, 2007.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/DDIA-ED2/book/part2/">
+<link crossorigin="anonymous" href="/DDIA-ED2/assets/css/stylesheet.a090830a421002426baafbd314e38f149d77b4c48a12ee9312700d770b27fb26.css" integrity="sha256-oJCDCkIQAkJrqvvTFOOPFJ13tMSKEu6TEnANdwsn&#43;yY=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/DDIA-ED2/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/DDIA-ED2/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/DDIA-ED2/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/DDIA-ED2/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/DDIA-ED2/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" type="application/rss+xml" href="http://localhost:1313/DDIA-ED2/book/part2/index.xml" title="rss">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/DDIA-ED2/book/part2/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="list" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/DDIA-ED2/" accesskey="h" title="My New Hugo Site (Alt + H)">My New Hugo Site</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+        </ul>
+    </nav>
+</header>
+<main class="main"> 
+<header class="page-header">
+  <h1>
+    第二部分：分布式数据
+  </h1>
+</header>
+<div class="post-content"><h1 id="第二部分分布式数据">第二部分：分布式数据<a hidden class="anchor" aria-hidden="true" href="#第二部分分布式数据">#</a></h1>
+<blockquote>
+<p>对成功的技术而言，现实必须置于比公共关系更加优先的地位，因为大自然是无法被欺骗的。</p>
+<p>— 理查德·费曼，罗杰斯委员会报告（1986）</p></blockquote>
+<p>在本书的第一部分，我们讨论了数据存储在单个机器场景的数据系统。在第二部分，我们不妨更进一层，试问：当有多台机器同事对数据进行存储或检索将会发生什么呢？</p>
+<p>以下是把数据库的数据分别放到多台机器上来进行存储的原因：</p>
+<ul>
+<li>
+<p>可扩展性:</p>
+<p>如果你的数据体量不断增加，读写负载超过单台机器所能承载的最大值，你可能会把这些负载分摊到多台机器上。</p>
+</li>
+<li>
+<p>容错性/高可用性:</p>
+<p>如果你的应用想要在一台机器（或多台机器，或者网络，或者单个数据中心）故障后仍能继续工作，你可以使用多台机器来为你提供冗余服务。当一个失败后，另外一个可以接管它来执行任务。</p>
+</li>
+<li>
+<p>延迟：</p>
+<p>如果你们的用户遍布世界各地，你可能会希望在世界各地的不同位置都拥有服务器，以便每个用户都可以从一个地理学上更接近他们的数据中心来获得服务。这样就避免了用户需要等待网络包穿越大半个地球才传输过来。</p>
+</li>
+</ul>
+<h2 id="应对更高负载的扩展">应对更高负载的扩展<a hidden class="anchor" aria-hidden="true" href="#应对更高负载的扩展">#</a></h2>
+<p>如果你只是用来应对高负载，那么最简单的办法就是选用一台更加强劲的机器（这种方式也被称为<strong>垂直扩展</strong>或<strong>升级升级</strong>）。多个cpu，多块内存，多个磁盘可以在同一个操作系统下结合使用，快速的连接设备使得cpu可以访问内存或磁盘的任何位置。在这种「共享内存架构」（<em>shared-memory architecture</em>）下，所有的组建都可以看作是一台机器[<a href="#part2References1">1</a>]。<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup></p>
+<p>共享内存的方式存在的一个问题就是，它的花费开销增长曲线比线性架构增长的更快：一个拥有两倍多的CPU，两倍多的内存以及两倍多磁盘容量的机器，它的开销比起单倍的机器通常要多于两倍。</p>
+<p>共享内存体系架构所提供的「<strong>容错性</strong>」是有限的—高端的机器一般都支持热插拔组建（你可以在不关闭电源的情况下来更换硬盘、内存、甚至是CPU）—但这也仅限于在同一地理位置范围内。</p>
+<p>另外一种是共享磁盘架构，它使用多台具有独立CPU和内存的机器，但是存储数据的磁盘阵列是被所有机器共享的，他们之间通过快速网络来进行连接。<sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup>这种架构适用于一些数据仓库场景，但是争用和锁开销限制了共享磁盘架构的可伸缩性[<a href="#part2References2">2</a>]。</p>
+<h3 id="无共享架构">无共享架构<a hidden class="anchor" aria-hidden="true" href="#无共享架构">#</a></h3>
+<p>相比之下，「<strong>无共享架构</strong>」[<a href="#part2References3">3</a>]（有时也称为<strong>水平扩展</strong>或<strong>向外扩展</strong>）要更加受青睐。在这种架构下，每一台运行着数据库软件的机器或虚拟机都被称为一个「<strong>节点</strong>」。每一个节点的CPU，内存和磁盘都是独立的。节点与节点之间也是通过传统的网络在软件层面进行协调。</p>
+<p>「<strong>无共享架构</strong>」对硬件没有特殊的要求，因此你可以选用架构更合适性价比更高的机器。你可以在多个不同的物理地址之间分发数据，这样可以有效的避免用户请求延迟的问题，而且当一个物理位置的数据中心崩溃后，另外一个能有效的存活下来。随着虚拟机的云部署，你不需要拥有像Google这样级别的运维能力：即使再小的公司，也可以轻松的构建异地多活分布式架构。</p>
+<p>在本书的这一部分，我们关注于「<strong>无共享架构</strong>」，尽管它可能不是我们所有应用场景中的最佳选择，但是对于我们，作为一个应用开发者来说是很值得我们去审慎对待的。如果你的数据是跨多个节点分区部署的，你要意识到数据库在这中间所做的规范以及权衡性措施—数据库不会平白无故的就帮助你完成这些事情。</p>
+<p>虽然分布式的「<strong>无共享架构</strong>」有很多优点，但它同时也增加了应用的复杂性，有时候甚至会限制你所使用数据模型的表达能力。有时候，一个简单的单线程程序可能拥有比100核CPU的集群更好的性能表现[<a href="#part2References4">4</a>]。不过，「无共享系统」的能力还是非常强大的。我们将在接下来的几章来详细介绍数据在分布式存储时可能遇到的问题。</p>
+<hr>
+<h3 id="副本分区">副本/分区<a hidden class="anchor" aria-hidden="true" href="#副本分区">#</a></h3>
+<p>使得数据分布在多个不同的节点一般有两种比较通用的方式：</p>
+<ul>
+<li>
+<p>副本</p>
+<p>在可能分布在不同地理位置的不同节点上保存相同的数据副本。提供冗余复制：当一些节点不可用时，其它数据节点还可以继续提供服务。副本机制还有助于提升性能。我们将在 <a href="chapter5.md">第五章</a> 来讨论「<strong>副本</strong>」。</p>
+</li>
+<li>
+<p>分区</p>
+<p>把一个大的数据库分解为更小的数据集称做「<strong>分区</strong>」，所以不同的分区可以看作是不同的节点（也可称为分片-<em>sharding</em>）。我们将在 <a href="chapter6.md">第六章</a> 来讨论「<strong>分区</strong>」。</p>
+</li>
+</ul>
+<p>虽说这些都是一些独立的特性，但往往他们可以同时使用。如<!-- raw HTML omitted --><a href="#figureII-1">图II-1</a><!-- raw HTML omitted -->所示：</p>
+<p><img loading="lazy" src="../img/figureII-1.png"></p>
+<p><!-- raw HTML omitted --><!-- raw HTML omitted --><strong>图II-1.</strong><!-- raw HTML omitted --><!-- raw HTML omitted -->一个拥有两个分区，每个分区有两个副本的数据库。</p>
+<p>理解了这些概念，我们可以讨论在分布式系统中所面临的困境以及在处理这些问题过程中所做的权衡。我们会在<a href="chapter7.md">第七章</a> 中讨论事务，这将会帮助你理解在分布式数据系统中可能出错的地方和原因以及我们怎么去避免这些错误。我们将在 <a href="chapter8.md">第八章</a> 和 <a href="chapter9.md">第九章</a> 中讨论分布式数据系统基本局限性来结束这一部分的内容。</p>
+<p>后面，我们会在本书的 <a href="../part3/README.md">第三部分</a>来讨论如果把多个数据仓库系统（有可能是分布式的）合并到一个更大的系统中，以此来满足更复杂应用的需求。但前提是，我们得闲讨论分布式数据。</p>
+<h3 id="参考文献">参考文献<a hidden class="anchor" aria-hidden="true" href="#参考文献">#</a></h3>
+<p>[<!-- raw HTML omitted -->1<!-- raw HTML omitted -->] Ulrich Drepper:<a href="http://www.akkadia.org/drepper/cpumemory.pdf"> “What Every Programmer Should Know About Memory,”</a> <em>akka‐dia.org</em>, November 21, 2007.</p>
+<p>[<!-- raw HTML omitted -->2<!-- raw HTML omitted -->] Ben Stopford: <a href="http://www.benstopford.com/2009/11/24/understanding-the-shared-nothing-architecture/">“Shared Nothing vs. Shared Disk Architectures: An IndependentView,”</a> <em>benstopford.com</em>, November 24, 2009.</p>
+<p>[<!-- raw HTML omitted -->3<!-- raw HTML omitted -->] Michael Stonebraker: <a href="#http://db.cs.berkeley.edu/papers/hpts85-nothing.pdf">“The Case for Shared Nothing,”</a> <em>IEEE Database Engineering Bulletin</em>, volume 9, number 1, pages 4–9, March 1986.</p>
+<p>[<!-- raw HTML omitted -->4<!-- raw HTML omitted -->] Frank McSherry, Michael Isard, and Derek G. Murray: “<a href="#http://www.frankmcsherry.org/assets/COST.pdf">Scalability! But at What COST?</a>,” at <em>15th USENIX Workshop on Hot Topics in Operating Systems</em> (HotOS),May 2015.</p>
+<div class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1">
+<p>In a large machine, although any CPU can access any part of memory, some banks of memory are closer toone CPU than to others (this is called <em>nonuniform memory access</em>, or NUMA ). To make efficient use of this architecture, the processing needs to be broken down so that each CPU mostly accesses memory that isnearby—which means that partitioning is still required, even when ostensibly running on one machine.&#160;<a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:2">
+<p><em>Network Attached Storage</em> (NAS) or <em>Storage Area Network</em> (SAN).&#160;<a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</div>
+
+
+</div>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>
+第五章：备份 一件事情出错和不出错最大的区别在于当一件不可能出错的事情出错时，通常已经难以挽救了。
+— Douglas Adams, Mostly Harmless (1992)
+备份意味着要在被网络连接的多个不同的机器之间存储相同的数据。正如在 第二部分 引言中所描述的，有以下几点原因是为什么需要进行备份：
+使数据在地理位置上离用户更近（减少延迟）。 当部分数据存储服务宕机后，系统仍然可以继续提供服务（提高可用性）。 自由伸缩提供读取服务的机器数量（提高读取吞吐量）。 在本章我们假设你的数据量足够小，每台机器都可以完整的保存整个数据集。在第六章会抛开这个假设来谈谈对于单台机器来说数据量过大时怎么来对数据集进行分区（分片）。在后续的章节，我们还会讨论在备份数据系统中可能产生的一些错误或者缺陷，以及如何来解决它们。
+如果你的副本数据不随着时间而发生变化，那复制是比较容易的：你只需要一次性的把数据复制到各个节点就可以了。复制机制中所有的难点都在于对更改的数据处理上，这也是我们本章所探讨的重点。我们会谈到节点之间对于变更数据复制的3种主流的算法：单主（single-leader）复制，多主（multi-leader）复制以及无主（leaderless）复制。所有对于分布式数据的处理无外乎这3种方式。他们之间各有利弊，接下来我们将会详细的阐述。
+复制（replication）涉及许多权衡考虑，例如是否使用同步或异步复制，以及如何处理失败的副本。这些通常是数据库中的配置选项，尽管具体细节因数据库而异，但原则上他们的实现是相似的。我们将在本章中讨论此他们做出这些选择的原因。
+数据库的复制是一个比较久远的话题—自从19世纪70年代以来，它的原理性的东西并没有太大变化[1]，因为底层网络的「约束规范性条件（fundamental constraints ）」也一直保持没变。然而，在研究之外，很多开发人员长时间以来一直认为数据库始终都只有一个节点。对于分布式数据的主流应用是近期才出现的。由于很多应用开发人员都是刚接触到这一领域，所以他们对于像「最终一致性（eventual consistency）」这些概念存在很多误解。在延迟同步问题我们将更深入的叙述「最终一致性」，并且会讨论诸如「读己写-read-your-writes」和「单调读 -monotonic reads」等概念。
+领导者和追随者 每一个存储数据库拷贝的节点我们称之为一个「副本-replica」。随着多副本的产生，问题也会随之而来：我们怎样确保每个副本中都保存有完整的数据？
+每一次对数据库的写请求必须能被所有副本接收并且处理；不然，数据库副本之间就可能会包含不同的数据。对于此类问题最常用的解决方案是如图5-1所示的「基于领导者复制-leader-based replication」（也被称作「主动/被动-active/passive」 或者「主从复制-master–slave replication」）。它的工作机制如下：
+把其中一个副本设定为「领导者」（也被称为「主-master」或「首要-primary」）。如果客户端对数据库写入数据，则必须将他们的请求发送给领导者，领导者会最先把新写入的数据写入到本地。
+其它的副本就是我们所说的「追随者」（也被叫做read replicas，slaves，secondaries或 hot standbys）。1当领导者把新数据写入本地存储后，还会把变更的数据以变更日志或变更流的形式发送给它的追随者。追随者接受到领导者发送的变更日志后便会更新它本地的数据库备份数据，它会按照领导者的执行顺序来执行本地的变更。
+当客户端读取时，它既可以从领导者副本读，也可以从追随者副本读取。但是写入请求只能由领导者副本接收（从客户端的角度来看，追随者副本是只读的）。
+图5-1. 基于领导者（主从）复制
+这种复制模型是很多诸如（PostgreSQL (9.0以后版本), MySQL, Oracle Data Guard [2], 以及 SQL Server的
+...</p>
+  </div>
+  <footer class="entry-footer"></footer>
+  <a class="entry-link" aria-label="post link to " href="http://localhost:1313/DDIA-ED2/book/part2/chapter5/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>
+第六章：分区 我们必须摆脱计算机既定的规则不被它限制，我们必须先规划好数据怎么设计、优先级怎么定义，然后梳理关系，最后才是编写代码。 — Grace Murray Hopper, Management and the Computer of the Future (1962)
+在第五章我们讨论了备份，在不同的节点上有多个拥有相同数据的备份。但是在大规模的数据集或者有着非常大的查询吞吐量的场景中，只有备份显然是不足够的：我们需要将数据分区，或者叫分片。1
+我们这里所说的分区在MongoDB，Elasticsearch和SolarCloud中通常称为分片。它和HBase中被称为region，BigTable中的tablet，Cassandra和Risk的vnode，Couchbase的vBucket是同样的概念。但是分区是最使用最广泛的称呼，所以我们这里也沿用这个称呼。
+通常，分区被定义为每个数据段（每条记录，每一行或每个文档）都只归属于同一个分区。它有各式各样的实现方法，我们会在本章来讨论。实际上，每个分区都是它自己的一个小型数据看，尽管数据库可以支持在同一时间对多个分区同时进行操作。
+我们想要把数据分区的最主要原因就是为了实现「可伸缩性」。在一个非共享的集群中，不同的数据可能会分配到不同的节点上（详情参见 第二部分 中对 shared nothing 的定义）。因此，大型数据库一般都会部署在多个磁盘上，这样查询也就会负载到多个处理进程中。
+对于在单一分区上的查询操作，每个节点都可以独立的在它所在的分区上完成查询操作，所以，可以通过增加更多的节点来提高查询吞吐量。大型复杂的查询操作也可以把他们看作隐性的并行在不同的节点之上，尽管这看上去会变得复杂一些。
+分区数据库是在19世纪80年代开创的，像Teradata 和 Tandem NonStop SQL，以及最近被提及到的 NoSql数据库和基于Hadoop的数据库都属于这类数据库。一些系统的设计目的是事务处理，一些是数据分析（详见 事务处理或分析）：数据库对于这两种不同的处理方式会有不同的处理方式，但是分区对于上述两种情况都适用。
+分区与副本 分区通常和副本结合来使用，以便能够将每个副本的数据存储到多个节点上。这也就意味着，即使每条记录只属于一个分区，它仍然能够存储在不同的服务节点上，以此来达到故障转移的目的。
+一个节点上通常存储多于一个分区的数据，如果使用的是「主-从复制」模式，那么分区和副本结合的方式就如同图6-1 所示。每个分区的领导者副本都分别被分配到了一个的节点上，而它的追随者副本则被分配到其它的节点上。每个分区都包括一些分区的领导者副本以及其它分区的追随者副本。
+所有我们在第五章讨论的关于数据库副本的理论都适用于这里的分区副本。但是分区方案的选择是不依赖于副本方案的，所以在本章中我们要忽略掉之前副本机制的干扰，尽量让事情变得简洁。
+图6-1. 副本和分区的组合。每个节点的一个分区分别充当其它节点追随者分区的领导者。
+...</p>
+  </div>
+  <footer class="entry-footer"></footer>
+  <a class="entry-link" aria-label="post link to " href="http://localhost:1313/DDIA-ED2/book/part2/chapter6/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>
+第七章：事务 一些创作者声称，出于一些性能和可用性的考虑，对通用的两阶段提交提供支持的代价是高昂的。我们有理由相信通过应用程序处理事务，总好过通过业务代码来处理繁杂的事务。
+— James Corbett 等.Spanner: Google 全球分布式数据库 (2012)
+在一个苛刻的数据系统中，很多事情都有可能出错：
+数据库系统或者硬件系统随时可能出现故障（包括在写操作的过程中）。 应用系统随时可能崩溃（包括在执行一系统操作的途中） 网络中断将意外的断开应用和数据库或数据库其中一个节点的连接。 客户端服务可能同时对数据库执行写操作，导致彼此更改的数据被覆盖。 客户端可能感知不到只有部分更新成功的数据。 客户端之间的竞态可能导致的奇怪异常。 为了可靠性，系统必须处理这些缺陷从而保证他们不会对整个系统造成灾难性的影响。然而，实现这些容错机制是一项重大的工程。它要求我们对所有可能出现异常的做出缜密的思考，还要做大量的测试工作来确保这些解决方案是真实有效的。
+近十年来，「事务」(transaction) 机制都是作为简化这些问题的首选方案。应用程序可以把事务中一组读写操作当作一个整体的逻辑单元来执行。从概念上讲，一个事务中包含的所有读写操作都可看作一个整体:要么执行成功（commit 提交），要么执行失败（abort 中止、rollback 回滚）。如果失败，应用程序可以安全的执行重试（retry）。有了事务，对应用来说处理异常就会变得简单多了，因为应用不需要关心诸如：“一部分操作成功、一部分操作失败（不管出于什么原因）”这种局部异常的情况。
+如果你已经有了几年事务的使用经验，我们会下意识认为事务是自然存在的，但实际上事务并不是凭空产生的，我们不能理所当然的认为它就应该存在；事务是为了简化应用程序访问数据库的编程模型而主动创建的。通过事务，应用程序可以不用关心并发以及其它的一些潜在错误场景，因为数据库替你做了这些工作（ 安全担保-safety guarantees ）;
+其实并不是所有的应用都需要用到事务，有些时候弱化甚至完全放弃事务担保反倒会更有优势（比如为了高性能或高可用）。甚至于说一些安全机制并不是非要用事务实现。
+那么我们怎么判断在什么情况下才需要事务呢？为了回答这个问题，我们首先需要明白的一点是越严格的事务担保机制，所花费的成本也就越高。之所以事务乍看起来很简单，是因为这中间的很多工作都被巧妙的隐藏在了实现细节中了。
+在这一章，我们会列举多个引发错误的示例，来探讨数据库用来防止出现这些错误的标准解决方案。另外我们会特别深入到 并发控制 领域，讨论各种可能引发的「竞态条件」的场景，以及数据库是怎样实现如「读已提交」（read committed）、「镜像隔离」（snapshot isolation）、「可串行化」（serializability）等隔离级别的。
+本章的讨论对于单机和分布式数据库都适用；到了第八章 我们会专注于讨论仅在分布式系统中可能出现的一些特殊挑战。
+事务的晦涩概念 在今天，几乎所有的关系型数据库以及部分非关系型数据库都支持事务。他们中大多数都延用了IBM公司在1975年发布的第一款SQL数据库[1,2,3]- IBM System R系统的风格。尽管有一些实现细节的差异，但是基本思路在40年来几乎没有改变过：MySQL，PostgreSQL，Oracle，SQL Server这些数据库上所支持的事务都与 System R 有着惊人的相似度。
+在21世纪末，非关系型（NoSQL）数据库开始逐渐登上历史舞台。他们旨在基于关系型数据库的基础之上，面对新的「数据模型」（参见：第二章）提供另一种默认包含「副本」（第五章）、「分区」（第六章）机制的新型数据库。事务则成为了这次创新历程中的牺牲品：很多新一代数据库或完全摒弃或以一个相比我们之前理解的要弱的多的保证机制重新定义了事务[4]。
+随着这些分布式数据库越来越受到追捧，人们普遍开始感觉事务是阻碍可伸缩性的最大敌人，并且坚定的认为任何大型系统想要保证高性能和高可用就必须放弃使用事务[5,6]。另一方面，一些数据库服务商提出的有事务做担保的系统是“重要应用”和“有价值数据”应用体现的这种观点，也被认为纯粹是在危言耸听。
+但事实并没有这么简单：与其它所有技术一样，事务也有它的优势和局限性。为了弄清事务在实现细节中所做的各种权衡，我们接下来会深入到事务在常规以及各种极端情况（确实存在）下所提供保障的细节中一探究竟。
+ACID的含义 事务提供的安全保证，通常会被描述成我们所熟知的代表着「原子性」（Atomicity），「一致性」（Consistency），「隔离性」（Isolation）和「持久性」（Durability）的首字母缩写-ACID。它是在1983年由Theo Härder 和 Andreas Reuter [7]提出来，旨在为数据库构建容错机制的精确术语。
+然而，在实践中，不同的数据库对ACID的实现不尽相同，例如，正如我们所了解的，对于“隔离性”的含义就存在着很多争议性[8]。总之理想很丰满…，但魔鬼往往隐藏在细节中。如今，当一个系统宣称他是“遵从ACID”的，我们并不能很确切的知道它到底给我们带来了哪些保证。
+原子性 通常，原子描述的是一些不能够再分解为更细小部分的物体。这个词在计算机的不同的领域描述的意思大致相同但却又有些微妙的变化在其中。例如：在多线程程序中，如果一个线程执行一个原子性操作，那么就意味着另一个线程是不能在当前线程未执行完成之前读取到任何中间态的结果的。系统的状态只存在操作前态和操作后态，中间不会再出现其它状态。
+相比之下，在ACID的语境中，「原子性」（atomicity）与并发无关。它不是描述多个进程试图同时访问相同数据的场景，这其实是接下来 ACID中的 I- isolation （隔离性）所涵盖的问题。
+相反，原子性描述的是多个客户端想要同时进行多次写操作，而在这些写操作的过程中，由于一些诸如进程崩溃，网络连接中断，磁盘空间不足，或者违反完整性约束之类原因而引发异常的场景。如果这些写操作可以组合到一个原子性的事务当中，当事务执行过程中出现异常情况没有执行完成（已提交-committed），事务将终止（aborted）执行，数据库将撤销或丢弃这之前已经执行的操作。
+假设没有原子性，那么当我们执行多个变更动作时突然发生异常，我们将很难分辨出哪些变更会对业务产生影响，哪些不会。如果这时候应用程序尝试再重新执行一次，则极有可能会重复之前的操作，这样就会导致相同的变更被执行了两次，从而导致数据重复或失实。但是有了原子性保证这个问题是不是就变得简单的多了：如果事务被终止，应用程序可以保证没有任何改变发生，所以也就可以很坦然的进行重试操作了。
+在错误发生时能够中止并且丢弃掉该事务之前所执行操作的这样一种能力，是 ACID 原子性的特性。或许「可中止的」（abortability）比起「原子性」（atomicity）可以描述的更加贴切，但是我们依旧会沿用“原子性”（atomicity）这个有共识性的词汇。
+一致性 「一致性」这个词的含义太宽泛了:
+...</p>
+  </div>
+  <footer class="entry-footer"></footer>
+  <a class="entry-link" aria-label="post link to " href="http://localhost:1313/DDIA-ED2/book/part2/chapter7/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>
+第八章：分布式系统面临的问题 一些创作者声称，出于一些性能和可用性的考虑，对通用的两阶段提交提供支持的代价是高昂的。我们有理由相信通过应用程序处理事务，总好过通过业务代码来处理繁杂的事务。
+— James Corbett 等.Spanner: Google 全球分布式数据库 (2012)
+</p>
+  </div>
+  <footer class="entry-footer"></footer>
+  <a class="entry-link" aria-label="post link to " href="http://localhost:1313/DDIA-ED2/book/part2/chapter8/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>
+第九章：一致性 苟且偷生还是舍生取义？
+—Jay Kreps,取自 Kafka 和 Jepsen的笔记（2013）
+salfj asfaf adfa sf 线性一致性</p>
+  </div>
+  <footer class="entry-footer"></footer>
+  <a class="entry-link" aria-label="post link to " href="http://localhost:1313/DDIA-ED2/book/part2/chapter9/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>第二部分：分布式数据 对成功的技术而言，现实必须置于比公共关系更加优先的地位，因为大自然是无法被欺骗的。
+— 理查德·费曼，罗杰斯委员会报告（1986）
+在本书的第一部分，我们讨论了数据存储在单个机器场景的数据系统。在第二部分，我们不妨更进一层，试问：当有多台机器同事对数据进行存储或检索将会发生什么呢？
+以下是把数据库的数据分别放到多台机器上来进行存储的原因：
+可扩展性:
+如果你的数据体量不断增加，读写负载超过单台机器所能承载的最大值，你可能会把这些负载分摊到多台机器上。
+容错性/高可用性:
+如果你的应用想要在一台机器（或多台机器，或者网络，或者单个数据中心）故障后仍能继续工作，你可以使用多台机器来为你提供冗余服务。当一个失败后，另外一个可以接管它来执行任务。
+延迟：
+如果你们的用户遍布世界各地，你可能会希望在世界各地的不同位置都拥有服务器，以便每个用户都可以从一个地理学上更接近他们的数据中心来获得服务。这样就避免了用户需要等待网络包穿越大半个地球才传输过来。
+应对更高负载的扩展 如果你只是用来应对高负载，那么最简单的办法就是选用一台更加强劲的机器（这种方式也被称为垂直扩展或升级升级）。多个cpu，多块内存，多个磁盘可以在同一个操作系统下结合使用，快速的连接设备使得cpu可以访问内存或磁盘的任何位置。在这种「共享内存架构」（shared-memory architecture）下，所有的组建都可以看作是一台机器[1]。1
+共享内存的方式存在的一个问题就是，它的花费开销增长曲线比线性架构增长的更快：一个拥有两倍多的CPU，两倍多的内存以及两倍多磁盘容量的机器，它的开销比起单倍的机器通常要多于两倍。
+共享内存体系架构所提供的「容错性」是有限的—高端的机器一般都支持热插拔组建（你可以在不关闭电源的情况下来更换硬盘、内存、甚至是CPU）—但这也仅限于在同一地理位置范围内。
+另外一种是共享磁盘架构，它使用多台具有独立CPU和内存的机器，但是存储数据的磁盘阵列是被所有机器共享的，他们之间通过快速网络来进行连接。2这种架构适用于一些数据仓库场景，但是争用和锁开销限制了共享磁盘架构的可伸缩性[2]。
+无共享架构 相比之下，「无共享架构」[3]（有时也称为水平扩展或向外扩展）要更加受青睐。在这种架构下，每一台运行着数据库软件的机器或虚拟机都被称为一个「节点」。每一个节点的CPU，内存和磁盘都是独立的。节点与节点之间也是通过传统的网络在软件层面进行协调。
+「无共享架构」对硬件没有特殊的要求，因此你可以选用架构更合适性价比更高的机器。你可以在多个不同的物理地址之间分发数据，这样可以有效的避免用户请求延迟的问题，而且当一个物理位置的数据中心崩溃后，另外一个能有效的存活下来。随着虚拟机的云部署，你不需要拥有像Google这样级别的运维能力：即使再小的公司，也可以轻松的构建异地多活分布式架构。
+在本书的这一部分，我们关注于「无共享架构」，尽管它可能不是我们所有应用场景中的最佳选择，但是对于我们，作为一个应用开发者来说是很值得我们去审慎对待的。如果你的数据是跨多个节点分区部署的，你要意识到数据库在这中间所做的规范以及权衡性措施—数据库不会平白无故的就帮助你完成这些事情。
+虽然分布式的「无共享架构」有很多优点，但它同时也增加了应用的复杂性，有时候甚至会限制你所使用数据模型的表达能力。有时候，一个简单的单线程程序可能拥有比100核CPU的集群更好的性能表现[4]。不过，「无共享系统」的能力还是非常强大的。我们将在接下来的几章来详细介绍数据在分布式存储时可能遇到的问题。
+副本/分区 使得数据分布在多个不同的节点一般有两种比较通用的方式：
+副本
+在可能分布在不同地理位置的不同节点上保存相同的数据副本。提供冗余复制：当一些节点不可用时，其它数据节点还可以继续提供服务。副本机制还有助于提升性能。我们将在 第五章 来讨论「副本」。
+分区
+把一个大的数据库分解为更小的数据集称做「分区」，所以不同的分区可以看作是不同的节点（也可称为分片-sharding）。我们将在 第六章 来讨论「分区」。
+虽说这些都是一些独立的特性，但往往他们可以同时使用。如图II-1所示：
+图II-1.一个拥有两个分区，每个分区有两个副本的数据库。
+理解了这些概念，我们可以讨论在分布式系统中所面临的困境以及在处理这些问题过程中所做的权衡。我们会在第七章 中讨论事务，这将会帮助你理解在分布式数据系统中可能出错的地方和原因以及我们怎么去避免这些错误。我们将在 第八章 和 第九章 中讨论分布式数据系统基本局限性来结束这一部分的内容。
+后面，我们会在本书的 第三部分来讨论如果把多个数据仓库系统（有可能是分布式的）合并到一个更大的系统中，以此来满足更复杂应用的需求。但前提是，我们得闲讨论分布式数据。
+参考文献 [1] Ulrich Drepper: “What Every Programmer Should Know About Memory,” akka‐dia.org, November 21, 2007.
+...</p>
+  </div>
+  <footer class="entry-footer"></footer>
+  <a class="entry-link" aria-label="post link to " href="http://localhost:1313/DDIA-ED2/book/part2/readme/"></a>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="http://localhost:1313/DDIA-ED2/">My New Hugo Site</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>
