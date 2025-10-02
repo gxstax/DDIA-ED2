@@ -1,4 +1,9 @@
-![ch3](../img/chapter3.png)
+---
+title: "第三章：存储与检索"
+---
+
+{{< img "img/chapter3.png" "第三章" "max-width:80%" >}}
+
 
 # 第三章：存储与检索
 

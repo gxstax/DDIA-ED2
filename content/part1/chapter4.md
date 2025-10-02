@@ -1,4 +1,8 @@
-![ch4](../img/chapter4.png)
+---
+title: "第四章：编码与演化"
+---
+
+{{< img "img/chapter4.png" "第四章" "max-width:80%" >}}
 
 # 第四章：编码与演化
 

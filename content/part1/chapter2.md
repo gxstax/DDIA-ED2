@@ -4,7 +4,7 @@ weight: 1  # 排序权重，数字越小越靠前
 layout: book  # 自定义布局，可选
 ---
 
-![第二章：数据模型与查询语言](/img/chapter2.png)
+{{< img "img/chapter2.png" "第二章：数据模型与查询语言" "max-width:80%" >}}
 
 # 第二章：数据模型与查询语言
 

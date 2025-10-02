@@ -1,4 +1,8 @@
-![ch5](../img/chapter5.png)
+---
+title: "第五章：备份"
+---
+
+{{< img "img/chapter5.png" "第五章" "max-width:80%" >}}
 
 # 第五章：备份
 

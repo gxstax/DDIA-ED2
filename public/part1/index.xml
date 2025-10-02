@@ -12,28 +12,7 @@
       <link>http://localhost:1313/DDIA-ED2/part1/chapter2/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       <guid>http://localhost:1313/DDIA-ED2/part1/chapter2/</guid>
-      <description>&lt;p&gt;&lt;img src=&#34;http://localhost:1313/DDIA-ED2/img/chapter2.png&#34; alt=&#34;第二章：数据模型与查询语言&#34; /&gt;&lt;/p&gt;&#xA;&lt;h1 id=&#34;第二章数据模型与查询语言&#34;&gt;第二章：数据模型与查询语言&lt;a class=&#34;anchor&#34; href=&#34;#%e7%ac%ac%e4%ba%8c%e7%ab%a0%e6%95%b0%e6%8d%ae%e6%a8%a1%e5%9e%8b%e4%b8%8e%e6%9f%a5%e8%af%a2%e8%af%ad%e8%a8%80&#34;&gt;#&lt;/a&gt;&lt;/h1&gt;&#xA;&lt;blockquote class=&#39;book-hint &#39;&gt;&#xA;&lt;p&gt;匮乏的语言限制了我对世界认知的表达。&lt;/p&gt;&#xA;&lt;p&gt;— 维特根斯坦《逻辑哲学论》（1922）&lt;/p&gt;&lt;/blockquote&gt;&lt;p&gt;  数据模型可能是软件开发中最重要的组成部分，无论是在如何编写程序上，还是在思考如何解决问题上都有深远的影响。&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title></title>
-      <link>http://localhost:1313/DDIA-ED2/part1/chapter1/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/DDIA-ED2/part1/chapter1/</guid>
-      <description>&lt;p&gt;&lt;img src=&#34;http://localhost:1313/DDIA-ED2/img/chapter1.png&#34; alt=&#34;第一章&#34; /&gt;&lt;/p&gt;&#xA;&lt;h1 id=&#34;第一章可靠性可伸缩性和可维护性&#34;&gt;第一章：可靠性、可伸缩性和可维护性&lt;a class=&#34;anchor&#34; href=&#34;#%e7%ac%ac%e4%b8%80%e7%ab%a0%e5%8f%af%e9%9d%a0%e6%80%a7%e5%8f%af%e4%bc%b8%e7%bc%a9%e6%80%a7%e5%92%8c%e5%8f%af%e7%bb%b4%e6%8a%a4%e6%80%a7&#34;&gt;#&lt;/a&gt;&lt;/h1&gt;&#xA;&lt;blockquote class=&#39;book-hint &#39;&gt;&#xA;&lt;p&gt;互联网取得了如此伟大的成就，人们习惯于它的存在就如同海洋自然的存在一样，我们甚至都已经忘记它是一个人造的产物。我们甚至都想不到上一次发生如此伟大的技术革命是在什么时候。&lt;/p&gt;&#xA;&lt;p&gt;— Alan Kay, 在接受 &lt;a href=&#34;https://www.drdobbs.com/architecture-and-design/interview-with-alan-kay/240003442&#34;&gt;Dr Dobb’s 期刊采访&lt;/a&gt;时说 (2012)&lt;/p&gt;&lt;/blockquote&gt;&lt;p&gt;在如今，很多系统都是&lt;strong&gt;数据密集型&lt;/strong&gt;（&lt;em&gt;data-intensive&lt;/em&gt;）系统，而非&lt;strong&gt;计算密集型&lt;/strong&gt;（&lt;em&gt;compute-intensive&lt;/em&gt;）。原来的CPU性能已经不再是限制应用的关键因素了—现在更多的问题在于数据的量级，数据的复杂度以及数据的变更的频率。&lt;/p&gt;&#xA;&lt;p&gt;数据密集型应用程序通常是基于那些拥有通用的标准功能模块所构建的的系统建立起来的。例如：可能很多应用都需要以下功能：&lt;/p&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;存储数据，以便于自己或其它应用在需要的时候再次查找（数据库）&lt;/li&gt;&#xA;&lt;li&gt;把复杂开销的操作记录结果记录下来，以便后续能快速的读取（缓存）&lt;/li&gt;&#xA;&lt;li&gt;允许用户通过关键字来搜索，或采用不同的方式来过滤数据（查询索引）&lt;/li&gt;&#xA;&lt;li&gt;给其它的“处理器”发送消息，使之能够异步执行（流处理）&lt;/li&gt;&#xA;&lt;li&gt;定期处理大量的数据（批处理）&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;p&gt;如果当你听到这些并没有多少感触，那只能说明这些数据系统的抽象很成功：我们虽然每天都在用，但是对他们的认识并不深刻。在构建应用程序时，大多数工程师并不会想着去从头写一个数据存储引擎，因为数据库已经是很好支撑这些功能工具了。&lt;/p&gt;&#xA;&lt;p&gt;但事实并没有这么简单。&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title></title>
-      <link>http://localhost:1313/DDIA-ED2/part1/chapter3/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/DDIA-ED2/part1/chapter3/</guid>
-      <description>&lt;p&gt;&lt;img src=&#34;../img/chapter3.png&#34; alt=&#34;ch3&#34; /&gt;&lt;/p&gt;&#xA;&lt;h1 id=&#34;第三章存储与检索&#34;&gt;第三章：存储与检索&lt;a class=&#34;anchor&#34; href=&#34;#%e7%ac%ac%e4%b8%89%e7%ab%a0%e5%ad%98%e5%82%a8%e4%b8%8e%e6%a3%80%e7%b4%a2&#34;&gt;#&lt;/a&gt;&lt;/h1&gt;&#xA;&lt;blockquote class=&#39;book-hint &#39;&gt;&#xA;&lt;p&gt;越是整理整齐的东西，越没有查找成本。&lt;/p&gt;&#xA;&lt;p&gt;— 德国谚语&lt;/p&gt;&lt;/blockquote&gt;&lt;p&gt;即使是最基础的数据库也需要能够做到以下两件事：存储你给的数据，返回你存储的数据。&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title></title>
-      <link>http://localhost:1313/DDIA-ED2/part1/chapter4/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/DDIA-ED2/part1/chapter4/</guid>
-      <description>&lt;p&gt;&lt;img src=&#34;../img/chapter4.png&#34; alt=&#34;ch4&#34; /&gt;&lt;/p&gt;&#xA;&lt;h1 id=&#34;第四章编码与演化&#34;&gt;第四章：编码与演化&lt;a class=&#34;anchor&#34; href=&#34;#%e7%ac%ac%e5%9b%9b%e7%ab%a0%e7%bc%96%e7%a0%81%e4%b8%8e%e6%bc%94%e5%8c%96&#34;&gt;#&lt;/a&gt;&lt;/h1&gt;&#xA;&lt;blockquote class=&#39;book-hint &#39;&gt;&#xA;&lt;p&gt;万物皆流，一切皆变&lt;/p&gt;&#xA;&lt;p&gt;— 赫拉克利特-引用《柏拉图对话录》-克拉底鲁篇（公元前360年）&lt;/p&gt;&lt;/blockquote&gt;&lt;p&gt;随着时间的推移应用不可避免的会发生变化，&lt;/p&gt;</description>
+      <description>&lt;img src=&#34;http://localhost:1313/DDIA-ED2/img/chapter2.png&#34; alt=&#34;第二章：数据模型与查询语言&#34; style=&#34;max-width:80%&#34; /&gt;&#xA;&#xA;&lt;h1 id=&#34;第二章数据模型与查询语言&#34;&gt;第二章：数据模型与查询语言&lt;a class=&#34;anchor&#34; href=&#34;#%e7%ac%ac%e4%ba%8c%e7%ab%a0%e6%95%b0%e6%8d%ae%e6%a8%a1%e5%9e%8b%e4%b8%8e%e6%9f%a5%e8%af%a2%e8%af%ad%e8%a8%80&#34;&gt;#&lt;/a&gt;&lt;/h1&gt;&#xA;&lt;blockquote class=&#39;book-hint &#39;&gt;&#xA;&lt;p&gt;匮乏的语言限制了我对世界认知的表达。&lt;/p&gt;&#xA;&lt;p&gt;— 维特根斯坦《逻辑哲学论》（1922）&lt;/p&gt;&lt;/blockquote&gt;&lt;p&gt;  数据模型可能是软件开发中最重要的组成部分，无论是在如何编写程序上，还是在思考如何解决问题上都有深远的影响。&lt;/p&gt;</description>
     </item>
     <item>
       <title></title>
@@ -41,6 +20,27 @@
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       <guid>http://localhost:1313/DDIA-ED2/part1/readme/</guid>
       <description>&lt;h1 id=&#34;第一部分数据系统基础&#34;&gt;第一部分：数据系统基础&lt;a class=&#34;anchor&#34; href=&#34;#%e7%ac%ac%e4%b8%80%e9%83%a8%e5%88%86%e6%95%b0%e6%8d%ae%e7%b3%bb%e7%bb%9f%e5%9f%ba%e7%a1%80&#34;&gt;#&lt;/a&gt;&lt;/h1&gt;&#xA;&lt;p&gt;前四章主要介绍适用于所有数据系统的理论基础，包括运行在单机节点以及分布式集群上的数据系统：&lt;/p&gt;&#xA;&lt;ol&gt;&#xA;&lt;li&gt;&#xA;&lt;p&gt;&lt;a href=&#34;http://localhost:1313/DDIA-ED2/part1/chapter1/&#34;&gt;第一章&lt;/a&gt; 介绍我们本书中用到的名词术语以及理论方法. 我们将会阐明到底什么是&lt;strong&gt;可靠性&lt;/strong&gt;，&lt;strong&gt;可伸缩性&lt;/strong&gt;和&lt;strong&gt;可维护性&lt;/strong&gt;，以及我们要怎样达成这些目标。&lt;/p&gt;&#xA;&lt;/li&gt;&#xA;&lt;li&gt;&#xA;&lt;p&gt;&lt;a href=&#34;http://localhost:1313/DDIA-ED2/part1/chapter2/&#34;&gt;第二章&lt;/a&gt; 对比一些不同的数据模型和查询语言，站在开发者的角度，这是数据库系统之间最明显的特征区别。我们会看到不同的数据模型是怎么适用到不同的场景中的。&lt;/p&gt;&#xA;&lt;/li&gt;&#xA;&lt;li&gt;&#xA;&lt;p&gt;&lt;a href=&#34;http://localhost:1313/DDIA-ED2/part1/chapter3/&#34;&gt;第三章&lt;/a&gt; 深入到存储引擎内部来看以下数据是怎么存储在磁盘上的。不同的存储引擎针对不同的数据存储场景都做了针对性的优化，选择正确的存储引擎将极大提升我们的系统性能。&lt;/p&gt;&#xA;&lt;/li&gt;&#xA;&lt;li&gt;&#xA;&lt;p&gt;&lt;a href=&#34;http://localhost:1313/DDIA-ED2/part1/chapter4/&#34;&gt;第四章&lt;/a&gt; 比较各种数据编码（序列化）格式，会着重介绍在它们随着应用需求的变化而不断演化的过程。&lt;/p&gt;&#xA;&lt;/li&gt;&#xA;&lt;/ol&gt;&#xA;&lt;p&gt;&lt;strong&gt;在后面的第二部分我们会讨论分布式系统特有的一些问题。&lt;/strong&gt;&lt;/p&gt;&#xA;&lt;hr&gt;&#xA;&lt;h3 id=&#34;目录&#34;&gt;目录&lt;a class=&#34;anchor&#34; href=&#34;#%e7%9b%ae%e5%bd%95&#34;&gt;#&lt;/a&gt;&lt;/h3&gt;&#xA;&lt;ol&gt;&#xA;&lt;li&gt;&lt;a href=&#34;http://localhost:1313/DDIA-ED2/part1/chapter1/&#34;&gt;第一章:&lt;/a&gt; 可靠性、可伸缩性和可维护性&lt;/li&gt;&#xA;&lt;li&gt;&lt;a href=&#34;http://localhost:1313/DDIA-ED2/part1/chapter2/&#34;&gt;第二章:&lt;/a&gt; 数据模型与查询语言&lt;/li&gt;&#xA;&lt;li&gt;&lt;a href=&#34;http://localhost:1313/DDIA-ED2/part1/chapter3/&#34;&gt;第三章:&lt;/a&gt; 存储与检索&lt;/li&gt;&#xA;&lt;li&gt;&lt;a href=&#34;http://localhost:1313/DDIA-ED2/part1/chapter4/&#34;&gt;第四章:&lt;/a&gt; 编码与演化&lt;/li&gt;&#xA;&lt;/ol&gt;</description>
+    </item>
+    <item>
+      <title>第一章：可靠性、可伸缩性和可维护性</title>
+      <link>http://localhost:1313/DDIA-ED2/part1/chapter1/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/DDIA-ED2/part1/chapter1/</guid>
+      <description>&lt;img src=&#34;http://localhost:1313/DDIA-ED2/img/chapter1.png&#34; alt=&#34;第一章&#34; style=&#34;max-width:80%&#34; /&gt;&#xA;&#xA;&lt;h1 id=&#34;第一章可靠性可伸缩性和可维护性&#34;&gt;第一章：可靠性、可伸缩性和可维护性&lt;a class=&#34;anchor&#34; href=&#34;#%e7%ac%ac%e4%b8%80%e7%ab%a0%e5%8f%af%e9%9d%a0%e6%80%a7%e5%8f%af%e4%bc%b8%e7%bc%a9%e6%80%a7%e5%92%8c%e5%8f%af%e7%bb%b4%e6%8a%a4%e6%80%a7&#34;&gt;#&lt;/a&gt;&lt;/h1&gt;&#xA;&lt;blockquote class=&#39;book-hint &#39;&gt;&#xA;&lt;p&gt;互联网取得了如此伟大的成就，人们习惯于它的存在就如同海洋自然的存在一样，我们甚至都已经忘记它是一个人造的产物。我们甚至都想不到上一次发生如此伟大的技术革命是在什么时候。&lt;/p&gt;&#xA;&lt;p&gt;— Alan Kay, 在接受 &lt;a href=&#34;https://www.drdobbs.com/architecture-and-design/interview-with-alan-kay/240003442&#34;&gt;Dr Dobb’s 期刊采访&lt;/a&gt;时说 (2012)&lt;/p&gt;&lt;/blockquote&gt;&lt;p&gt;在如今，很多系统都是&lt;strong&gt;数据密集型&lt;/strong&gt;（&lt;em&gt;data-intensive&lt;/em&gt;）系统，而非&lt;strong&gt;计算密集型&lt;/strong&gt;（&lt;em&gt;compute-intensive&lt;/em&gt;）。原来的CPU性能已经不再是限制应用的关键因素了—现在更多的问题在于数据的量级，数据的复杂度以及数据的变更的频率。&lt;/p&gt;&#xA;&lt;p&gt;数据密集型应用程序通常是基于那些拥有通用的标准功能模块所构建的的系统建立起来的。例如：可能很多应用都需要以下功能：&lt;/p&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;存储数据，以便于自己或其它应用在需要的时候再次查找（数据库）&lt;/li&gt;&#xA;&lt;li&gt;把复杂开销的操作记录结果记录下来，以便后续能快速的读取（缓存）&lt;/li&gt;&#xA;&lt;li&gt;允许用户通过关键字来搜索，或采用不同的方式来过滤数据（查询索引）&lt;/li&gt;&#xA;&lt;li&gt;给其它的“处理器”发送消息，使之能够异步执行（流处理）&lt;/li&gt;&#xA;&lt;li&gt;定期处理大量的数据（批处理）&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;p&gt;如果当你听到这些并没有多少感触，那只能说明这些数据系统的抽象很成功：我们虽然每天都在用，但是对他们的认识并不深刻。在构建应用程序时，大多数工程师并不会想着去从头写一个数据存储引擎，因为数据库已经是很好支撑这些功能工具了。&lt;/p&gt;&#xA;&lt;p&gt;但事实并没有这么简单。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>第三章：存储与检索</title>
+      <link>http://localhost:1313/DDIA-ED2/part1/chapter3/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/DDIA-ED2/part1/chapter3/</guid>
+      <description>&lt;img src=&#34;http://localhost:1313/DDIA-ED2/img/chapter3.png&#34; alt=&#34;第三章&#34; style=&#34;max-width:80%&#34; /&gt;&#xA;&#xA;&lt;h1 id=&#34;第三章存储与检索&#34;&gt;第三章：存储与检索&lt;a class=&#34;anchor&#34; href=&#34;#%e7%ac%ac%e4%b8%89%e7%ab%a0%e5%ad%98%e5%82%a8%e4%b8%8e%e6%a3%80%e7%b4%a2&#34;&gt;#&lt;/a&gt;&lt;/h1&gt;&#xA;&lt;blockquote class=&#39;book-hint &#39;&gt;&#xA;&lt;p&gt;越是整理整齐的东西，越没有查找成本。&lt;/p&gt;&#xA;&lt;p&gt;— 德国谚语&lt;/p&gt;&lt;/blockquote&gt;&lt;p&gt;即使是最基础的数据库也需要能够做到以下两件事：存储你给的数据，返回你存储的数据。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>第四章：编码与演化</title>
+      <link>http://localhost:1313/DDIA-ED2/part1/chapter4/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/DDIA-ED2/part1/chapter4/</guid>
+      <description>&lt;img src=&#34;http://localhost:1313/DDIA-ED2/img/chapter4.png&#34; alt=&#34;第四章&#34; style=&#34;max-width:80%&#34; /&gt;&#xA;&#xA;&lt;h1 id=&#34;第四章编码与演化&#34;&gt;第四章：编码与演化&lt;a class=&#34;anchor&#34; href=&#34;#%e7%ac%ac%e5%9b%9b%e7%ab%a0%e7%bc%96%e7%a0%81%e4%b8%8e%e6%bc%94%e5%8c%96&#34;&gt;#&lt;/a&gt;&lt;/h1&gt;&#xA;&lt;blockquote class=&#39;book-hint &#39;&gt;&#xA;&lt;p&gt;万物皆流，一切皆变&lt;/p&gt;&#xA;&lt;p&gt;— 赫拉克利特-引用《柏拉图对话录》-克拉底鲁篇（公元前360年）&lt;/p&gt;&lt;/blockquote&gt;&lt;p&gt;随着时间的推移应用不可避免的会发生变化，&lt;/p&gt;</description>
     </item>
   </channel>
 </rss>
