@@ -1,4 +1,4 @@
-baseURL = 'https://gxstax.github.io/DDIA-ED2/'
-languageCode = 'en-us'
+baseURL = "https://gxstax.github.io/DDIA-ED2/"
+languageCode = 'zh-CN'
 title = 'DDIA(第二版)'
 theme = 'hugo-book'

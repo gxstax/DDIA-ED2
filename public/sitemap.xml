@@ -4,13 +4,19 @@
   <url>
     <loc>http://localhost:1313/DDIA-ED2/part1/</loc>
   </url><url>
+    <loc>http://localhost:1313/DDIA-ED2/part1/chapter2/</loc>
+  </url><url>
     <loc>http://localhost:1313/DDIA-ED2/part2/</loc>
   </url><url>
     <loc>http://localhost:1313/DDIA-ED2/part3/</loc>
   </url><url>
-    <loc>http://localhost:1313/DDIA-ED2/part1/chapter1/</loc>
+    <loc>http://localhost:1313/DDIA-ED2/about_the_author/</loc>
   </url><url>
-    <loc>http://localhost:1313/DDIA-ED2/part1/chapter2/</loc>
+    <loc>http://localhost:1313/DDIA-ED2/glossary/</loc>
+  </url><url>
+    <loc>http://localhost:1313/DDIA-ED2/indexs/</loc>
+  </url><url>
+    <loc>http://localhost:1313/DDIA-ED2/part1/chapter1/</loc>
   </url><url>
     <loc>http://localhost:1313/DDIA-ED2/part1/chapter3/</loc>
   </url><url>
@@ -37,6 +43,10 @@
     <loc>http://localhost:1313/DDIA-ED2/part3/chapter12/</loc>
   </url><url>
     <loc>http://localhost:1313/DDIA-ED2/part3/readme/</loc>
+  </url><url>
+    <loc>http://localhost:1313/DDIA-ED2/preface/</loc>
+  </url><url>
+    <loc>http://localhost:1313/DDIA-ED2/readme/</loc>
   </url><url>
     <loc>http://localhost:1313/DDIA-ED2/categories/</loc>
   </url><url>

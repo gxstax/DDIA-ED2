@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en-us" dir="ltr">
+<html lang="zh-CN" dir="ltr">
 <head><script src="/DDIA-ED2/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=DDIA-ED2/livereload" data-no-instant defer></script>
   <!--
 Made with Book Theme
@@ -68,7 +68,7 @@ ACID的含义# 事务提供的安全保证，通常会被描述成我们所熟�
 相反，原子性描述的是多个客户端想要同时进行多次写操作，而在这些写操作的过程中，由于一些诸如进程崩溃，网络连接中断，磁盘空间不足，或者违反完整性约束之类原因而引发异常的场景。如果这些写操作可以组合到一个原子性的事务当中，当事务执行过程中出现异常情况没有执行完成（已提交-committed），事务将终止（aborted）执行，数据库将撤销或丢弃这之前已经执行的操作。
 假设没有原子性，那么当我们执行多个变更动作时突然发生异常，我们将很难分辨出哪些变更会对业务产生影响，哪些不会。如果这时候应用程序尝试再重新执行一次，则极有可能会重复之前的操作，这样就会导致相同的变更被执行了两次，从而导致数据重复或失实。但是有了原子性保证这个问题是不是就变得简单的多了：如果事务被终止，应用程序可以保证没有任何改变发生，所以也就可以很坦然的进行重试操作了。
 在错误发生时能够中止并且丢弃掉该事务之前所执行操作的这样一种能力，是 ACID 原子性的特性。或许「可中止的」（abortability）比起「原子性」（atomicity）可以描述的更加贴切，但是我们依旧会沿用“原子性”（atomicity）这个有共识性的词汇。">
-  <meta property="og:locale" content="en_us">
+  <meta property="og:locale" content="zh_CN">
   <meta property="og:type" content="article">
     <meta property="article:section" content="part2">
 <title>Chapter7 | DDIA(第二版)</title>
@@ -79,7 +79,7 @@ ACID的含义# 事务提供的安全保证，通常会被描述成我们所熟�
 
 
   <script defer src="/DDIA-ED2/fuse.min.js"></script>
-  <script defer src="/DDIA-ED2/en.search.min.da0b2f1ab345f07b4b3884222fe5408265657977493c4ec436966a30a893f14d.js" integrity="sha256-2gsvGrNF8HtLOIQiL&#43;VAgmVleXdJPE7ENpZqMKiT8U0=" crossorigin="anonymous"></script>
+  <script defer src="/DDIA-ED2/en.search.min.1a6be69aeb20c86e75c853594b69d3c2757366ff4fbece57615bbaad83c553de.js" integrity="sha256-GmvmmusgyG51yFNZS2nTwnVzZv9Pvs5XYVu6rYPFU94=" crossorigin="anonymous"></script>
 
   
 </head>

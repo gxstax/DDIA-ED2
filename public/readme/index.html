@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN" dir="ltr">
+<head><script src="/DDIA-ED2/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=DDIA-ED2/livereload" data-no-instant defer></script>
+  <!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="数据密集型应用设计-中文翻译#
+
+
+作者 Martin Kleppmann
+
+
+书名 《Designing Data-Intensive Applications》
+
+
+译者 马以
+
+
+gitbook在线阅读地址：
+
+
+第一版
+
+
+第二版（持续更新中&hellip;）
+
+
+
+
+科技是推动社会发展的源动力，为恶之人通过数据、软件和通信等技术手段高筑阶级的围墙、剥夺人民的权利来袒护他们的既得利益。为善之人则需要拿起技术工具为大众发声，去打破桎梏，让每个人获得机会。仅以此书献给持续做出贡献的后者。 
+
+翻译初衷：本书有中译本（中国电力出版社-赵军平等译），也有网译版（[冯若航译]），感谢他们的翻译，我也是读着他们的译本开始学习的；
+之所以选择自己再来翻译一遍，一是感觉还是读自己翻译的文章可能读起来更舒服，也更贴合自己的理解，二是后续再读第3遍，第5遍时可以随时在线做笔记。跟着英文原文再来体验第一手的资料，总会有意外的收获。
+
+Martin Kleppmann 是英国剑桥大学分布式系统方向的研究员。曾担任过LinkedIn和Rapportive等互联网公司的软件工程师，负责大规模数据基础设施建设。Martin还是一位活跃的会议演讲者、博主和开源贡献者。">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#343a40">
+<meta name="color-scheme" content="light dark"><meta property="og:url" content="http://localhost:1313/DDIA-ED2/readme/">
+  <meta property="og:site_name" content="DDIA(第二版)">
+  <meta property="og:title" content="DDIA(第二版)">
+  <meta property="og:description" content="数据密集型应用设计-中文翻译# 作者 Martin Kleppmann
+书名 《Designing Data-Intensive Applications》
+译者 马以
+gitbook在线阅读地址：
+第一版
+第二版（持续更新中…）
+科技是推动社会发展的源动力，为恶之人通过数据、软件和通信等技术手段高筑阶级的围墙、剥夺人民的权利来袒护他们的既得利益。为善之人则需要拿起技术工具为大众发声，去打破桎梏，让每个人获得机会。仅以此书献给持续做出贡献的后者。 翻译初衷：本书有中译本（中国电力出版社-赵军平等译），也有网译版（[冯若航译]），感谢他们的翻译，我也是读着他们的译本开始学习的；
+之所以选择自己再来翻译一遍，一是感觉还是读自己翻译的文章可能读起来更舒服，也更贴合自己的理解，二是后续再读第3遍，第5遍时可以随时在线做笔记。跟着英文原文再来体验第一手的资料，总会有意外的收获。
+Martin Kleppmann 是英国剑桥大学分布式系统方向的研究员。曾担任过LinkedIn和Rapportive等互联网公司的软件工程师，负责大规模数据基础设施建设。Martin还是一位活跃的会议演讲者、博主和开源贡献者。">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+<title>Readme | DDIA(第二版)</title>
+<link rel="icon" href="/DDIA-ED2/favicon.png" >
+<link rel="manifest" href="/DDIA-ED2/manifest.json">
+<link rel="canonical" href="http://localhost:1313/DDIA-ED2/readme/">
+<link rel="stylesheet" href="/DDIA-ED2/book.min.d124d6c76b11546b04023ef152f0ca77dd5bfd00e1638c75250d60e274cdc189.css" integrity="sha256-0STWx2sRVGsEAj7xUvDKd91b/QDhY4x1JQ1g4nTNwYk=" crossorigin="anonymous">
+
+
+  <script defer src="/DDIA-ED2/fuse.min.js"></script>
+  <script defer src="/DDIA-ED2/en.search.min.1a6be69aeb20c86e75c853594b69d3c2757366ff4fbece57615bbaad83c553de.js" integrity="sha256-GmvmmusgyG51yFNZS2nTwnVzZv9Pvs5XYVu6rYPFU94=" crossorigin="anonymous"></script>
+
+  
+</head>
+<body dir="ltr" class="book-kind-page book-type-page">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    
+<aside class="book-menu">
+  <div class="book-menu-content">
+    
+  <nav>
+<h2 class="book-brand">
+  <a class="flex align-center" href="/DDIA-ED2/"><span>DDIA(第二版)</span>
+  </a>
+</h2>
+
+
+<div class="book-search hidden">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+<script>document.querySelector(".book-search").classList.remove("hidden")</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+
+  </div>
+</aside>
+ 
+
+    <div class="book-page">
+      <header class="book-header hidden">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/DDIA-ED2/icons/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <h3>Readme</h3>
+
+  <label for="toc-control">
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  
+<nav id="TableOfContents"></nav>
+
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown book-article"><h1 id="数据密集型应用设计-中文翻译">数据密集型应用设计-中文翻译<a class="anchor" href="#%e6%95%b0%e6%8d%ae%e5%af%86%e9%9b%86%e5%9e%8b%e5%ba%94%e7%94%a8%e8%ae%be%e8%ae%a1-%e4%b8%ad%e6%96%87%e7%bf%bb%e8%af%91">#</a></h1>
+<ul>
+<li>
+<p>作者 <a href="https://martin.kleppmann.com/">Martin Kleppmann</a></p>
+</li>
+<li>
+<p>书名 <a href="http://shop.oreilly.com/product/0636920032175.do">《Designing Data-Intensive Applications》</a></p>
+</li>
+<li>
+<p>译者 <a href="https://github.com/gxstax">马以</a></p>
+</li>
+<li>
+<p>gitbook在线阅读地址：</p>
+<ul>
+<li>
+<p><a href="https://ma-yi.gitbook.io/ddia-zh-cn/">第一版</a></p>
+</li>
+<li>
+<p><a href="https://gxstax.github.io/DDIA-ED2/">第二版（持续更新中&hellip;）</a></p>
+</li>
+</ul>
+</li>
+</ul>
+<p><!-- raw HTML omitted --><!-- raw HTML omitted -->科技是推动社会发展的源动力，为恶之人通过数据、软件和通信等技术手段高筑阶级的围墙、剥夺人民的权利来袒护他们的既得利益。为善之人则需要拿起技术工具为大众发声，去打破桎梏，让每个人获得机会。仅以此书献给持续做出贡献的后者。<!-- raw HTML omitted --> <!-- raw HTML omitted --></p>
+<p><!-- raw HTML omitted --><!-- raw HTML omitted --></p>
+<p>翻译初衷：本书有中译本（<a href="">中国电力出版社-赵军平等译</a>），也有网译版（<a href="https://github.com/Vonng/ddia">[冯若航译]</a>），感谢他们的翻译，我也是读着他们的译本开始学习的；</p>
+<p>之所以选择自己再来翻译一遍，一是感觉还是读自己翻译的文章可能读起来更舒服，也更贴合自己的理解，二是后续再读第3遍，第5遍时可以随时在线做笔记。跟着英文原文再来体验第一手的资料，总会有意外的收获。</p>
+<blockquote class='book-hint '>
+<p>Martin Kleppmann 是英国剑桥大学分布式系统方向的研究员。曾担任过LinkedIn和Rapportive等互联网公司的软件工程师，负责大规模数据基础设施建设。Martin还是一位活跃的会议演讲者、博主和开源贡献者。</p></blockquote></article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+<div>
+
+</div>
+
+<div>
+
+</div>
+
+</div>
+
+
+
+
+
+
+
+
+
+  <script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script>
+
+
+ 
+        
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+        
+        
+
+ 
+      </footer>
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+
+ 
+  </main>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

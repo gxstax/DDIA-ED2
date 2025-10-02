@@ -1,4 +1,4 @@
-![第一章](../img/chapter1.png)
+![第一章](/img/chapter1.png)
 
 # 第一章：可靠性、可伸缩性和可维护性
 
